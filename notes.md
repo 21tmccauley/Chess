@@ -1,1 +1,1 @@
-echo # My notes
+# My notes
