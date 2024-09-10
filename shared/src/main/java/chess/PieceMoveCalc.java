@@ -16,23 +16,13 @@ public class PieceMoveCalc {
     public Collection<ChessMove> calculateMoves(ChessPiece piece, ChessBoard board, ChessPosition position) {
         // Use a switch expression to determine which method to call based on the piece type
         return switch (piece.getPieceType()) {
-            case KING -> calculateKingMoves(piece, board, position);
+            case KING -> calculateFixedPieceMoves(piece, board, position, KING_MOVES);
             case QUEEN -> calculateSlidingPieceMoves(piece, board, position, QUEEN_DIRECTIONS);
             case BISHOP -> calculateSlidingPieceMoves(piece, board, position, BISHOP_DIRECTIONS);
-            case KNIGHT -> calculateKnightMoves(piece, board, position);
+            case KNIGHT -> calculateFixedPieceMoves(piece, board, position, KNIGHT_MOVES);
             case ROOK -> calculateSlidingPieceMoves(piece, board, position, ROOK_DIRECTIONS);
             case PAWN -> calculatePawnMoves(piece, board, position);
         };
-    }
-
-    // Calculate moves for the King
-    private Collection<ChessMove> calculateKingMoves(ChessPiece piece, ChessBoard board, ChessPosition position) {
-        return calculateFixedPieceMoves(piece, board, position, KING_MOVES);
-    }
-
-    // Calculate moves for the Knight
-    private Collection<ChessMove> calculateKnightMoves(ChessPiece piece, ChessBoard board, ChessPosition position) {
-        return calculateFixedPieceMoves(piece, board, position, KNIGHT_MOVES);
     }
 
     // Generic method to calculate moves for pieces with fixed movement patterns (King and Knight)
