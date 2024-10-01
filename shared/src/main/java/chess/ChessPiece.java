@@ -53,7 +53,12 @@ public class ChessPiece {
      * @return Collection of valid moves
      */
     public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
-        return moveCalculator.calculateMoves(this, board, myPosition);
+        // This method is for backward compatibility with existing tests
+        return pieceMoves(board, myPosition, new GameState());
+    }
+
+    public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition, GameState gameState) {
+        return moveCalculator.calculateMoves(this, board, myPosition, gameState);
     }
 
     @Override
