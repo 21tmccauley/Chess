@@ -3,6 +3,8 @@ package chess;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import static chess.ChessUtils.isValidPosition;
+
 public class FixedMoveStrategy implements MoveStrategy {
     private final int[][] moveOffsets;
     private final boolean isKing;
@@ -18,11 +20,11 @@ public class FixedMoveStrategy implements MoveStrategy {
         int currentRow = position.getRow();
         int currentColumn = position.getColumn();
 
-        for (int[] move : moveOffsets) {
-            int newRow = currentRow + move[0];
-            int newColumn = currentColumn + move[1];
+        for (int[] offset : moveOffsets) {
+            int newRow = currentRow + offset[0];
+            int newColumn = currentColumn + offset[1];
 
-            if (ChessUtils.isValidPosition(newRow, newColumn)) {
+            if (isValidPosition(newRow, newColumn)) {
                 ChessPosition newPosition = new ChessPosition(newRow, newColumn);
                 ChessPiece targetPiece = board.getPiece(newPosition);
 
@@ -30,10 +32,6 @@ public class FixedMoveStrategy implements MoveStrategy {
                     moves.add(new ChessMove(position, newPosition, null));
                 }
             }
-        }
-
-        if (isKing) {
-            addCastlingMoves(piece, board, position, gameState, moves);
         }
 
         return moves;
