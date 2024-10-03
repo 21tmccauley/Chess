@@ -25,7 +25,6 @@ public class ChessGame {
      * @return Which team's turn it is
      */
     public TeamColor getTeamTurn() {
-
         return teamTurn;
     }
 
@@ -35,7 +34,6 @@ public class ChessGame {
      * @param team the team whose turn it is
      */
     public void setTeamTurn(TeamColor team) {
-
         this.teamTurn = team;
     }
 
@@ -56,13 +54,17 @@ public class ChessGame {
      */
     public Collection<ChessMove> validMoves(ChessPosition startPosition) {
         ChessPiece piece = board.getPiece(startPosition);
-       // if (piece != null && piece.getTeamColor() == teamTurn) {
-        if (piece != null){
+        if (piece != null) {
             Collection<ChessMove> moves = piece.pieceMoves(board, startPosition, gameState);
             moves.removeIf(move -> wouldLeaveInCheck(move));
             return moves;
         }
         return null;
+    }
+
+    private boolean isValidMoveForCurrentTurn(ChessMove move) {
+        ChessPiece piece = board.getPiece(move.getStartPosition());
+        return piece != null && piece.getTeamColor() == teamTurn;
     }
 
     private boolean wouldLeaveInCheck(ChessMove move) {
@@ -89,8 +91,11 @@ public class ChessGame {
      * @throws InvalidMoveException if move is invalid
      */
     public void makeMove(ChessMove move) throws InvalidMoveException {
+        if (!isValidMoveForCurrentTurn(move)) {
+            throw new InvalidMoveException("It's not this team's turn");
+        }
+
         Collection<ChessMove> validMoves = validMoves(move.getStartPosition());
-        // Implement move validation
         if (validMoves == null || !validMoves.contains(move)) {
             throw new InvalidMoveException("Invalid move");
         }
@@ -208,14 +213,13 @@ public class ChessGame {
         return true;
     }
 
-
-        /**
-         * Sets this game's chessboard with a given board
-         *
-         * @param board the new board to use
-         */
+    /**
+     * Sets this game's chessboard with a given board
+     *
+     * @param board the new board to use
+     */
     public void setBoard(ChessBoard board) {
-       this.board = board;
+        this.board = board;
     }
 
     /**
