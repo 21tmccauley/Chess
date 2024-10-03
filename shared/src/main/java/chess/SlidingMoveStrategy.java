@@ -3,6 +3,8 @@ package chess;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import static chess.ChessUtils.isValidPosition;
+
 public class SlidingMoveStrategy implements MoveStrategy {
     private final int[][] directions;
 
@@ -48,7 +50,4 @@ public class SlidingMoveStrategy implements MoveStrategy {
         return moves;
     }
 
-    private boolean isValidPosition(int row, int column) {
-        return row >= 1 && row <= 8 && column >= 1 && column <= 8;
-    }
 }
