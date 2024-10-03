@@ -18,7 +18,16 @@ public class PawnMoveStrategy implements MoveStrategy {
         // Initial two-square move
         if ((piece.getTeamColor() == ChessGame.TeamColor.WHITE && currentRow == 2) ||
                 (piece.getTeamColor() == ChessGame.TeamColor.BLACK && currentRow == 7)) {
-            addPawnMove(moves, board, position, currentRow + 2 * direction, currentColumn);
+            // Check if the square immediately in front is empty
+            ChessPosition nextPosition = new ChessPosition(currentRow + direction, currentColumn);
+            if (board.getPiece(nextPosition) == null) {
+                // If the immediate square is empty, check the double move square
+                ChessPosition doublePosition = new ChessPosition(currentRow + 2 * direction, currentColumn);
+                if (board.getPiece(doublePosition) == null) {
+                    // Both squares are empty, so add the double move
+                    addPawnMove(moves, board, position, currentRow + 2 * direction, currentColumn);
+                }
+            }
         }
 
         // Diagonal captures
