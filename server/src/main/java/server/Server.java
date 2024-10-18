@@ -9,21 +9,29 @@ import model.*;
 import java.util.Map;
 
 public class Server {
-    private final UserService userService;
-    private final GameService gameService;
-    private final AuthService authService;
-    private final DataAccess dataAccess;
-    private final Gson gson;
+    private DataAccess dataAccess;
+    private AuthService authService;
+    private UserService userService;
+    private GameService gameService;
+    private Gson gson;
 
-    public Server(DataAccess dataAccess) {
+    public Server() {
+        // Default constructor
+    }
+
+    public void initializeDataAccess(DataAccess dataAccess) {
         this.dataAccess = dataAccess;
+        this.gson = new Gson();
         this.authService = new AuthService(dataAccess);
         this.userService = new UserService(dataAccess, authService);
         this.gameService = new GameService(dataAccess, authService);
-        this.gson = new Gson();
     }
 
     public int run(int desiredPort) {
+
+        if (dataAccess == null) {
+            initializeDataAccess(new MemoryDataAccess());
+        }
         Spark.port(desiredPort);
         Spark.staticFiles.location("web");
 
