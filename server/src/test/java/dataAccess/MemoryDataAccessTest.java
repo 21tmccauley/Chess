@@ -1,52 +1,26 @@
 package dataAccess;
 
+import model.UserData;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 class MemoryDataAccessTest {
+    private DataAccess dataAccess;
 
-    @Test
-    void generateGameId() {
+    @BeforeEach
+    void setUp() {
+        dataAccess = new MemoryDataAccess();
     }
 
     @Test
-    void clearAll() {
+    void createUserAndGetUser() throws DataAccessException {
+        UserData user = new UserData("testUser", "password123", "test@example.com");
+        dataAccess.createUser(user);
+
+        UserData retrievedUser = dataAccess.getUser("testUser");
+        assertEquals(user, retrievedUser);
     }
 
-    @Test
-    void createUser() {
-    }
-
-    @Test
-    void getUser() {
-    }
-
-    @Test
-    void createGame() {
-    }
-
-    @Test
-    void getGame() {
-    }
-
-    @Test
-    void updateGame() {
-    }
-
-    @Test
-    void listGames() {
-    }
-
-    @Test
-    void createAuth() {
-    }
-
-    @Test
-    void getAuth() {
-    }
-
-    @Test
-    void deleteAuth() {
-    }
+    // Other test methods...
 }
