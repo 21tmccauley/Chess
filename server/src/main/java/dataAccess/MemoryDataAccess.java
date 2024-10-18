@@ -1,4 +1,4 @@
-package dataaccess;
+package dataAccess;
 
 import model.UserData;
 import model.GameData;
@@ -20,7 +20,7 @@ public class MemoryDataAccess implements DataAccess {
         return nextGameId++;
     }
 
-    public void clear(){
+    public void clearAll(){
         users.clear();
         games.clear();
         auths.clear();

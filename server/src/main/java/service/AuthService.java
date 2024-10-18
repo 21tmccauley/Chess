@@ -1,7 +1,7 @@
 package service;
 
-import dataaccess.DataAccess;
-import dataaccess.DataAccessException;
+import dataAccess.DataAccess;
+import dataAccess.DataAccessException;
 import model.AuthData;
 
 public class AuthService {
@@ -12,17 +12,17 @@ public class AuthService {
     }
 
     public String generateAuthToken() {
-        String authToken = java.util.UUID.randomUUID().toString();
-        // You might want to check if this token already exists in your database
-        return authToken;
+        return java.util.UUID.randomUUID().toString();
     }
 
     public AuthData createAuth(String username) throws DataAccessException {
         String authToken = generateAuthToken();
         AuthData authData = new AuthData(authToken, username);
         dataAccess.createAuth(authData);
-        return authData;  // Return the created AuthData
+        return authData;
     }
 
-    // Other auth-related methods...
+    public AuthData getAuth(String authToken) throws DataAccessException {
+        return dataAccess.getAuth(authToken);
+    }
 }
