@@ -25,4 +25,8 @@ public class AuthService {
     public AuthData getAuth(String authToken) throws DataAccessException {
         return dataAccess.getAuth(authToken);
     }
+
+    public void deleteAuth(String authToken) throws DataAccessException {
+        dataAccess.deleteAuth(authToken);
+    }
 }
