@@ -1,5 +1,7 @@
 package dataAccess;
 
+import chess.ChessGame;
+import model.GameData;
 import model.UserData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,5 +24,25 @@ class MemoryDataAccessTest {
         assertEquals(user, retrievedUser);
     }
 
-    // Other test methods...
+    @Test
+    void createDuplicateUser() {
+        UserData user = new UserData("testUser", "password123", "test@example.com");
+        assertDoesNotThrow(() -> dataAccess.createUser(user));
+        assertThrows(DataAccessException.class, () -> dataAccess.createUser(user));
+    }
+
+    @Test
+    void getNonExistentUser() {
+        assertThrows(DataAccessException.class, () -> dataAccess.getUser("nonExistentUser"));
+    }
+
+    @Test
+    void createAndGetGame() throws DataAccessException {
+        GameData game = new GameData(0, null, null, "TestGame", new ChessGame());
+        int gameId = dataAccess.createGame(game);
+
+        GameData retrievedGame = dataAccess.getGame(gameId);
+        assertEquals(game.gameName(), retrievedGame.gameName());
+        assertEquals(gameId, retrievedGame.gameID());
+    }
 }
