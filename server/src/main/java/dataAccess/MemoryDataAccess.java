@@ -16,7 +16,7 @@ public class MemoryDataAccess implements DataAccess {
 
     private int nextGameId = 1;
 
-    private int generateGameId(){
+    public int generateGameId(){
         return nextGameId++;
     }
 
@@ -44,11 +44,11 @@ public class MemoryDataAccess implements DataAccess {
     }
 
     @Override
-    public void createGame(GameData game) throws DataAccessException {
-        if (games.containsKey(game.gameID())) {
-            throw new DataAccessException("Game already exists");
-        }
-        games.put(game.gameID(), game);
+    public int createGame(GameData game) throws DataAccessException {
+        int gameId = generateGameId();
+        GameData newGame = new GameData(gameId, game.whiteUsername(), game.blackUsername(), game.gameName(), game.game());
+        games.put(gameId, newGame);
+        return gameId;
     }
 
     @Override

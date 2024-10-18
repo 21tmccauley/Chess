@@ -23,7 +23,6 @@ public class GameService {
         if (authData == null) {
             throw new DataAccessException("Invalid auth token");
         }
-
         // Create a new game
         GameData newGame = new GameData(0, null, null, gameName, new ChessGame());
         return dataAccess.createGame(newGame);

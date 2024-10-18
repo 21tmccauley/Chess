@@ -12,10 +12,11 @@ public class Server {
     private final UserService userService;
     private final GameService gameService;
     private final AuthService authService;
+    private final DataAccess dataAccess;
     private final Gson gson;
 
-    public Server() {
-        DataAccess dataAccess = new MemoryDataAccess();
+    public Server(DataAccess dataAccess) {
+        this.dataAccess = dataAccess;
         this.authService = new AuthService(dataAccess);
         this.userService = new UserService(dataAccess, authService);
         this.gameService = new GameService(dataAccess, authService);
@@ -127,7 +128,7 @@ public class Server {
 
     private Object clearApplication(Request req, Response res) {
         try {
-            MemoryDataAccess.clearAll();
+            dataAccess.clearAll();
             res.status(200);
             return "{}";
         } catch (DataAccessException e) {
