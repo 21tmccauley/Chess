@@ -1,11 +1,11 @@
 import chess.*;
-import dataAccess.DataAccess;
-import dataAccess.MemoryDataAccess;
+import dataAccess.Dataaccess;
+import dataAccess.MemoryDataaccess;
 import server.Server;
 
 public class Main {
     public static void main(String[] args) {
-        DataAccess dataAccess = new MemoryDataAccess(); // Or whatever implementation you're using
+        Dataaccess dataAccess = new MemoryDataaccess(); // Or whatever implementation you're using
         Server server = new Server();
         server.run(8080);
 

@@ -9,7 +9,7 @@ import model.*;
 import java.util.Map;
 
 public class Server {
-    private DataAccess dataAccess;
+    private Dataaccess dataAccess;
     private AuthService authService;
     private UserService userService;
     private GameService gameService;
@@ -19,7 +19,7 @@ public class Server {
         // Default constructor
     }
 
-    public void initializeDataAccess(DataAccess dataAccess) {
+    public void initializeDataAccess(Dataaccess dataAccess) {
         this.dataAccess = dataAccess;
         this.gson = new Gson();
         this.authService = new AuthService(dataAccess);
@@ -29,7 +29,7 @@ public class Server {
 
     public int run(int desiredPort) {
         if (dataAccess == null) {
-            initializeDataAccess(new MemoryDataAccess());
+            initializeDataAccess(new MemoryDataaccess());
         }
 
         Spark.port(desiredPort);

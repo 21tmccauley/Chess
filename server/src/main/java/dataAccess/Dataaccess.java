@@ -6,7 +6,7 @@ import model.AuthData;
 
 import java.util.Collection;
 
-public interface DataAccess {
+public interface Dataaccess {
     void clearAll() throws DataAccessException;
     void createUser(UserData user) throws DataAccessException;
     UserData getUser(String username) throws DataAccessException;

@@ -9,7 +9,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-public class MemoryDataAccess implements DataAccess {
+public class MemoryDataaccess implements Dataaccess {
     private final Map<String, UserData> users = new HashMap<>();
     private final Map<Integer, GameData> games = new HashMap<>();
     private final Map<String, AuthData> auths = new HashMap<>();

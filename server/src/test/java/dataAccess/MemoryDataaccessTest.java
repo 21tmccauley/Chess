@@ -11,12 +11,12 @@ import java.util.Collection;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class MemoryDataAccessTest {
-    private DataAccess dataAccess;
+class MemoryDataaccessTest {
+    private Dataaccess dataAccess;
 
     @BeforeEach
     void setUp() {
-        dataAccess = new MemoryDataAccess();
+        dataAccess = new MemoryDataaccess();
     }
 
     @Test

@@ -11,11 +11,11 @@ class ServerTest {
     private UserService userService;
     private GameService gameService;
     private AuthService authService;
-    private DataAccess dataAccess;
+    private Dataaccess dataAccess;
 
     @BeforeEach
     void setUp() throws DataAccessException {
-        dataAccess = new MemoryDataAccess();
+        dataAccess = new MemoryDataaccess();
         authService = new AuthService(dataAccess);
         userService = new UserService(dataAccess, authService);
         gameService = new GameService(dataAccess, authService);

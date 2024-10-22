@@ -1,15 +1,15 @@
 package service;
 
-import dataAccess.DataAccess;
+import dataAccess.Dataaccess;
 import dataAccess.DataAccessException;
 import model.UserData;
 import model.AuthData;
 
 public class UserService {
-    private final DataAccess dataAccess;
+    private final Dataaccess dataAccess;
     private final AuthService authService;
 
-    public UserService(DataAccess dataAccess, AuthService authService) {
+    public UserService(Dataaccess dataAccess, AuthService authService) {
         this.dataAccess = dataAccess;
         this.authService = authService;
     }

@@ -1,7 +1,7 @@
 package service;
 
-import dataAccess.MemoryDataAccess;
-import dataAccess.DataAccess;
+import dataAccess.MemoryDataaccess;
+import dataAccess.Dataaccess;
 import dataAccess.DataAccessException;
 import model.AuthData;
 import org.junit.jupiter.api.BeforeEach;
@@ -10,12 +10,12 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class AuthServiceTest {
     private AuthService authService;
-    private DataAccess dataAccess;
+    private Dataaccess dataAccess;
 
     @BeforeEach
     void setUp() {
         // Use real implementation with in-memory data store
-        dataAccess = new MemoryDataAccess();
+        dataAccess = new MemoryDataaccess();
         authService = new AuthService(dataAccess);
 
         // Clear data before each test
@@ -27,7 +27,7 @@ class AuthServiceTest {
     }
 
     @Test
-    void createAuth_success() throws DataAccessException {
+    void createAuthSuccess() throws DataAccessException {
         // Arrange
         String username = "testUser";
 
@@ -47,7 +47,7 @@ class AuthServiceTest {
     }
 
     @Test
-    void createAuth_multipleTokens_unique() throws DataAccessException {
+    void createAuthMultipleTokensUnique() throws DataAccessException {
         // Arrange
         String username = "testUser";
 
@@ -70,7 +70,7 @@ class AuthServiceTest {
     }
 
     @Test
-    void getAuth_existingAuth_success() throws DataAccessException {
+    void getAuthExistingAuthSuccess() throws DataAccessException {
         // Arrange
         String username = "testUser";
         AuthData createdAuth = authService.createAuth(username);
@@ -85,7 +85,7 @@ class AuthServiceTest {
     }
 
     @Test
-    void getAuth_nonexistentAuth_throwsException() {
+    void getAuthNonexistentAuthThrowsException() {
         // Arrange
         String nonexistentToken = "nonexistentToken";
 
@@ -95,7 +95,7 @@ class AuthServiceTest {
     }
 
     @Test
-    void deleteAuth_existingAuth_success() throws DataAccessException {
+    void deleteAuthExistingAuthSuccess() throws DataAccessException {
         // Arrange
         String username = "testUser";
         AuthData authData = authService.createAuth(username);
@@ -109,7 +109,7 @@ class AuthServiceTest {
     }
 
     @Test
-    void deleteAuth_nonexistentAuth_throwsException() {
+    void deleteAuthNonexistentAuthThrowsException() {
         // Arrange
         String nonexistentToken = "nonexistentToken";
 
@@ -119,7 +119,7 @@ class AuthServiceTest {
     }
 
     @Test
-    void generateAuthToken_uniqueTokens() {
+    void generateAuthTokenUniqueTokens() {
         // Act
         String token1 = authService.generateAuthToken();
         String token2 = authService.generateAuthToken();
@@ -142,7 +142,7 @@ class AuthServiceTest {
     }
 
     @Test
-    void generateAuthToken_validFormat() {
+    void generateAuthTokenValidFormat() {
         // Act
         String token = authService.generateAuthToken();
 

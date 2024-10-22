@@ -1,8 +1,7 @@
 package service;
 
-import chess.ChessGame;
-import dataAccess.MemoryDataAccess;
-import dataAccess.DataAccess;
+import dataAccess.MemoryDataaccess;
+import dataAccess.Dataaccess;
 import dataAccess.DataAccessException;
 import model.AuthData;
 import model.GameData;
@@ -14,14 +13,14 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class GameServiceTest {
     private GameService gameService;
-    private DataAccess dataAccess;
+    private Dataaccess dataAccess;
     private AuthService authService;
     private UserService userService;
 
     @BeforeEach
     void setUp() {
         // Use real implementations with in-memory data store
-        dataAccess = new MemoryDataAccess();
+        dataAccess = new MemoryDataaccess();
         authService = new AuthService(dataAccess);
         gameService = new GameService(dataAccess, authService);
         userService = new UserService(dataAccess, authService);
@@ -40,7 +39,7 @@ class GameServiceTest {
     }
 
     @Test
-    void createGame_success() throws DataAccessException {
+    void createGameSuccess() throws DataAccessException {
         // Arrange
         AuthData authData = createTestUser("testUser");
         String gameName = "testGame";
@@ -59,7 +58,7 @@ class GameServiceTest {
     }
 
     @Test
-    void createGame_invalidAuth_fails() throws DataAccessException {
+    void createGameInvalidAuthFails() throws DataAccessException {
         // Arrange
         String invalidToken = "invalidToken";
         String gameName = "testGame";
@@ -69,7 +68,7 @@ class GameServiceTest {
     }
 
     @Test
-    void listGames_success() throws DataAccessException {
+    void listGamesSuccess() throws DataAccessException {
         // Arrange
         AuthData authData = createTestUser("testUser");
 
@@ -91,7 +90,7 @@ class GameServiceTest {
     }
 
     @Test
-    void listGames_invalidAuth_fails() throws DataAccessException {
+    void listGamesInvalidAuthFails() throws DataAccessException {
         // Arrange
         String invalidToken = "invalidToken";
 
@@ -100,7 +99,7 @@ class GameServiceTest {
     }
 
     @Test
-    void joinGame_success() throws DataAccessException {
+    void joinGameSuccess() throws DataAccessException {
         // Arrange
         AuthData authData = createTestUser("testUser");
         int gameId = gameService.createGame(authData.authToken(), "testGame");
@@ -116,7 +115,7 @@ class GameServiceTest {
     }
 
     @Test
-    void joinGame_invalidAuth_fails() throws DataAccessException {
+    void joinGameInvalidAuthFails() throws DataAccessException {
         // Arrange
         AuthData authData = createTestUser("testUser");
         int gameId = gameService.createGame(authData.authToken(), "testGame");
@@ -128,7 +127,7 @@ class GameServiceTest {
     }
 
     @Test
-    void joinGame_nonexistentGame_fails() throws DataAccessException {
+    void joinGameNonexistentGameFails() throws DataAccessException {
         // Arrange
         AuthData authData = createTestUser("testUser");
         int nonexistentGameId = 9999;
@@ -139,7 +138,7 @@ class GameServiceTest {
     }
 
     @Test
-    void joinGame_colorTaken_fails() throws DataAccessException {
+    void joinGameColorTakenFails() throws DataAccessException {
         // Arrange
         AuthData user1 = createTestUser("user1");
         AuthData user2 = createTestUser("user2");
@@ -154,7 +153,7 @@ class GameServiceTest {
     }
 
     @Test
-    void joinGame_invalidColor_fails() throws DataAccessException {
+    void joinGameInvalidColorFails() throws DataAccessException {
         // Arrange
         AuthData authData = createTestUser("testUser");
         int gameId = gameService.createGame(authData.authToken(), "testGame");
@@ -165,7 +164,7 @@ class GameServiceTest {
     }
 
     @Test
-    void joinGame_differentColors_success() throws DataAccessException {
+    void joinGameDifferentColorsSuccess() throws DataAccessException {
         // Arrange
         AuthData user1 = createTestUser("user1");
         AuthData user2 = createTestUser("user2");

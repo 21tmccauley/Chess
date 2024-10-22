@@ -1,7 +1,7 @@
 package service;
 
 import chess.ChessGame;
-import dataAccess.DataAccess;
+import dataAccess.Dataaccess;
 import dataAccess.DataAccessException;
 import model.GameData;
 import model.AuthData;
@@ -9,10 +9,10 @@ import model.AuthData;
 import java.util.Collection;
 
 public class GameService {
-    private final DataAccess dataAccess;
+    private final Dataaccess dataAccess;
     private final AuthService authService;
 
-    public GameService(DataAccess dataAccess, AuthService authService) {
+    public GameService(Dataaccess dataAccess, AuthService authService) {
         this.dataAccess = dataAccess;
         this.authService = authService;
     }

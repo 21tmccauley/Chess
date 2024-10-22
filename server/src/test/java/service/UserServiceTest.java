@@ -1,7 +1,7 @@
 package service;
 
-import dataAccess.MemoryDataAccess;
-import dataAccess.DataAccess;
+import dataAccess.MemoryDataaccess;
+import dataAccess.Dataaccess;
 import dataAccess.DataAccessException;
 import model.UserData;
 import model.AuthData;
@@ -11,13 +11,13 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class UserServiceTest {
     private UserService userService;
-    private DataAccess dataAccess;
+    private Dataaccess dataAccess;
     private AuthService authService;
 
     @BeforeEach
     void setUp() {
         // Use a real in-memory implementation instead of mocks
-        dataAccess = new MemoryDataAccess();
+        dataAccess = new MemoryDataaccess();
         authService = new AuthService(dataAccess);
         userService = new UserService(dataAccess, authService);
 
@@ -30,7 +30,7 @@ class UserServiceTest {
     }
 
     @Test
-    void registerNewUser_success() throws DataAccessException {
+    void registerNewUserSuccess() throws DataAccessException {
         // Arrange
         UserData userData = new UserData("newUser", "password", "email@example.com");
 
@@ -51,7 +51,7 @@ class UserServiceTest {
     }
 
     @Test
-    void registerExistingUser_fails() throws DataAccessException {
+    void registerExistingUserFails() throws DataAccessException {
         // Arrange
         UserData userData = new UserData("existingUser", "password", "email@example.com");
 
@@ -63,7 +63,7 @@ class UserServiceTest {
     }
 
     @Test
-    void loginValidUser_success() throws DataAccessException {
+    void loginValidUserSuccess() throws DataAccessException {
         // Arrange
         UserData userData = new UserData("validUser", "password", "email@example.com");
         userService.register(userData); // Register user first
@@ -83,7 +83,7 @@ class UserServiceTest {
     }
 
     @Test
-    void loginInvalidUser_fails() {
+    void loginInvalidUserFails() {
         // Arrange
         UserData userData = new UserData("invalidUser", "password", "email@example.com");
 
@@ -92,7 +92,7 @@ class UserServiceTest {
     }
 
     @Test
-    void loginWrongPassword_fails() throws DataAccessException {
+    void loginWrongPasswordFails() throws DataAccessException {
         // Arrange
         UserData correctUser = new UserData("user", "correctPassword", "email@example.com");
         userService.register(correctUser); // Register with correct password
@@ -104,7 +104,7 @@ class UserServiceTest {
     }
 
     @Test
-    void logoutValidToken_success() throws DataAccessException {
+    void logoutValidTokenSuccess() throws DataAccessException {
         // Arrange
         UserData userData = new UserData("user", "password", "email@example.com");
         AuthData authData = userService.register(userData);
@@ -118,7 +118,7 @@ class UserServiceTest {
     }
 
     @Test
-    void logoutInvalidToken_fails() {
+    void logoutInvalidTokenFails() {
         // Arrange
         String invalidToken = "invalidToken";
 
