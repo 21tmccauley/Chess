@@ -216,11 +216,6 @@ public class Server {
         }
     }
 
-    private void handleDataAccessException(DataAccessException e, Request req, Response res) {
-        res.status(500);
-        res.body(gson.toJson(Map.of("message", "Error: " + e.getMessage())));
-    }
-
     private boolean isEmpty(String str) {
         return str == null || str.trim().isEmpty();
     }
