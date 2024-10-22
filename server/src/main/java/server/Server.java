@@ -33,7 +33,7 @@ public class Server {
         }
 
         Spark.port(desiredPort);
-        Spark.staticFiles.location("web");
+        Spark.staticFiles.location("resources/web");
 
         // Register endpoints
         registerEndpoints();
@@ -128,14 +128,19 @@ public class Server {
                 return gson.toJson(Map.of("message", "Error: bad request"));
             }
 
-            int gameId = gameService.createGame(authToken, gameName);
-            res.status(200);
-            return gson.toJson(Map.of("gameID", gameId));
-        } catch (DataAccessException e) {
-            if (e.getMessage().contains("Invalid auth token")) {
-                res.status(401);
-                return gson.toJson(Map.of("message", "Error: unauthorized"));
+            try {
+                int gameId = gameService.createGame(authToken, gameName);
+                res.status(200);
+                return gson.toJson(Map.of("gameID", gameId));
+            } catch (DataAccessException e) {
+                if (e.getMessage().contains("Invalid auth token") ||
+                        e.getMessage().contains("Auth token not found")) {
+                    res.status(401);
+                    return gson.toJson(Map.of("message", "Error: unauthorized"));
+                }
+                throw e;  // rethrow other DataAccessExceptions to be handled as 500
             }
+        } catch (DataAccessException e) {
             res.status(500);
             return gson.toJson(Map.of("message", "Error: " + e.getMessage()));
         }
@@ -175,26 +180,26 @@ public class Server {
             int gameId = ((Double) joinGameRequest.get("gameID")).intValue();
             String playerColor = (String) joinGameRequest.get("playerColor");
 
-            if (playerColor != null && !playerColor.equals("WHITE") && !playerColor.equals("BLACK")) {
-                res.status(400);
-                return gson.toJson(Map.of("message", "Error: bad request"));
+            try {
+                gameService.joinGame(authToken, gameId, playerColor);
+                res.status(200);
+                return "{}";
+            } catch (DataAccessException e) {
+                if (e.getMessage().contains("Invalid auth token") ||
+                        e.getMessage().contains("Auth token not found")) {
+                    res.status(401);
+                    return gson.toJson(Map.of("message", "Error: unauthorized"));
+                } else if (e.getMessage().contains("already joined")) {
+                    res.status(403);
+                    return gson.toJson(Map.of("message", "Error: already taken"));
+                } else if (e.getMessage().contains("Game not found") ||
+                        e.getMessage().contains("Invalid player color")) {
+                    res.status(400);
+                    return gson.toJson(Map.of("message", "Error: bad request"));
+                }
+                throw e;  // rethrow other DataAccessExceptions to be handled as 500
             }
-
-            gameService.joinGame(authToken, gameId, playerColor);
-            res.status(200);
-            return "{}";
         } catch (DataAccessException e) {
-            if (e.getMessage().contains("already joined")) {
-                res.status(403);
-                return gson.toJson(Map.of("message", "Error: already taken"));
-            } else if (e.getMessage().contains("Invalid auth token")) {
-                res.status(401);
-                return gson.toJson(Map.of("message", "Error: unauthorized"));
-            } else if (e.getMessage().contains("Game not found") ||
-                    e.getMessage().contains("Invalid player color")) {
-                res.status(400);
-                return gson.toJson(Map.of("message", "Error: bad request"));
-            }
             res.status(500);
             return gson.toJson(Map.of("message", "Error: " + e.getMessage()));
         }

@@ -36,8 +36,9 @@ class MemoryDataAccessTest {
     }
 
     @Test
-    void getNonExistentUser() {
-        assertThrows(DataAccessException.class, () -> dataAccess.getUser("nonExistentUser"));
+    void getNonExistentUser() throws DataAccessException {  // Add throws declaration
+        // Now handles the potential exception
+        assertNull(dataAccess.getUser("nonExistentUser"));
     }
 
     @Test
@@ -98,7 +99,7 @@ class MemoryDataAccessTest {
 
         dataAccess.clearAll();
 
-        assertThrows(DataAccessException.class, () -> dataAccess.getUser("testUser"));
+        assertNull(dataAccess.getUser("testUser"));  // This line already has exception handling from method declaration
         assertThrows(DataAccessException.class, () -> dataAccess.getGame(1));
         assertThrows(DataAccessException.class, () -> dataAccess.getAuth("token123"));
         assertTrue(dataAccess.listGames().isEmpty());
