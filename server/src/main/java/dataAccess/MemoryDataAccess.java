@@ -36,11 +36,7 @@ public class MemoryDataAccess implements DataAccess {
 
     @Override
     public UserData getUser(String username) throws DataAccessException {
-        UserData user = users.get(username);
-        if (user == null) {
-            throw new DataAccessException("User not found");
-        }
-        return user;
+        return users.get(username);  // Simply return null if user doesn't exist
     }
 
     @Override
