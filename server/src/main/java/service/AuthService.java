@@ -1,7 +1,7 @@
 package service;
 
-import dataAccess.Dataaccess;
-import dataAccess.DataAccessException;
+import dataaccess.Dataaccess;
+import dataaccess.DataAccessException;
 import model.AuthData;
 
 public class AuthService {

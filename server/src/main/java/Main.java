@@ -1,6 +1,6 @@
 import chess.*;
-import dataAccess.Dataaccess;
-import dataAccess.MemoryDataaccess;
+import dataaccess.Dataaccess;
+import dataaccess.MemoryDataaccess;
 import server.Server;
 
 public class Main {

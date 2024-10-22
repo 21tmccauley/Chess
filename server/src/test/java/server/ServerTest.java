@@ -1,6 +1,6 @@
 package server;
 
-import dataAccess.*;
+import dataaccess.*;
 import model.*;
 import org.junit.jupiter.api.*;
 import service.*;
