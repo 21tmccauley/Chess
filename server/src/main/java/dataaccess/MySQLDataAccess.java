@@ -88,7 +88,6 @@ public class MySQLDataAccess implements Dataaccess {
             try (var preparedStatement = conn.prepareStatement(
                     "INSERT INTO users (username, password, email) VALUES (?, ?, ?)")) {
                 preparedStatement.setString(1, user.username());
-                // Make sure to use BCrypt for password hashing
                 preparedStatement.setString(2, BCrypt.hashpw(user.password(), BCrypt.gensalt()));
                 preparedStatement.setString(3, user.email());
                 preparedStatement.executeUpdate();
@@ -134,13 +133,16 @@ public class MySQLDataAccess implements Dataaccess {
                 preparedStatement.setString(3, game.gameName());
                 preparedStatement.setString(4, gson.toJson(game.game()));
 
-                preparedStatement.executeUpdate();
+                int affectedRows = preparedStatement.executeUpdate();
+                if (affectedRows == 0) {
+                    throw new DataAccessException("Creating game failed, no rows affected.");
+                }
 
                 try (var generatedKeys = preparedStatement.getGeneratedKeys()) {
                     if (generatedKeys.next()) {
                         return generatedKeys.getInt(1);
                     } else {
-                        throw new DataAccessException("Failed to get generated game ID");
+                        throw new DataAccessException("Creating game failed, no ID obtained.");
                     }
                 }
             }
@@ -175,9 +177,8 @@ public class MySQLDataAccess implements Dataaccess {
     @Override
     public void updateGame(GameData game) throws DataAccessException {
         try (var conn = DatabaseManager.getConnection()) {
-            try (var preparedStatement = conn.prepareStatement(
-                    "UPDATE games SET whiteUsername=?, blackUsername=?, gameName=?, game=? WHERE gameID=?")) {
-
+            String sql = "UPDATE games SET whiteUsername=?, blackUsername=?, gameName=?, game=? WHERE gameID=?";
+            try (var preparedStatement = conn.prepareStatement(sql)) {
                 preparedStatement.setString(1, game.whiteUsername());
                 preparedStatement.setString(2, game.blackUsername());
                 preparedStatement.setString(3, game.gameName());
@@ -199,10 +200,8 @@ public class MySQLDataAccess implements Dataaccess {
         try (var conn = DatabaseManager.getConnection()) {
             try (var preparedStatement = conn.prepareStatement(
                     "INSERT INTO auth_tokens (authToken, username) VALUES (?, ?)")) {
-
                 preparedStatement.setString(1, auth.authToken());
                 preparedStatement.setString(2, auth.username());
-
                 preparedStatement.executeUpdate();
             }
         } catch (SQLException e) {
@@ -212,6 +211,7 @@ public class MySQLDataAccess implements Dataaccess {
             throw new DataAccessException(String.format("Unable to create auth token: %s", e.getMessage()));
         }
     }
+
 
     @Override
     public AuthData getAuth(String authToken) throws DataAccessException {
