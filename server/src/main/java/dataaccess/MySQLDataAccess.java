@@ -5,6 +5,7 @@ import model.GameData;
 import model.AuthData;
 import chess.ChessGame;
 import com.google.gson.Gson;
+import org.mindrot.jbcrypt.BCrypt;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -84,9 +85,11 @@ public class MySQLDataAccess implements Dataaccess {
     @Override
     public void createUser(UserData user) throws DataAccessException {
         try (var conn = DatabaseManager.getConnection()) {
-            try (var preparedStatement = conn.prepareStatement("INSERT INTO users (username, password, email) VALUES (?, ?, ?)")) {
+            try (var preparedStatement = conn.prepareStatement(
+                    "INSERT INTO users (username, password, email) VALUES (?, ?, ?)")) {
                 preparedStatement.setString(1, user.username());
-                preparedStatement.setString(2, user.password());
+                // Make sure to use BCrypt for password hashing
+                preparedStatement.setString(2, BCrypt.hashpw(user.password(), BCrypt.gensalt()));
                 preparedStatement.setString(3, user.email());
                 preparedStatement.executeUpdate();
             }
