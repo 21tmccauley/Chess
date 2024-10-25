@@ -119,44 +119,183 @@ public class MySQLDataAccess implements Dataaccess {
         return null;
     }
 
-    // TODO: Implement remaining interface methods
     @Override
     public int createGame(GameData game) throws DataAccessException {
-        throw new UnsupportedOperationException("Not implemented yet");
+        try (var conn = DatabaseManager.getConnection()) {
+            try (var preparedStatement = conn.prepareStatement(
+                    "INSERT INTO games (whiteUsername, blackUsername, gameName, game) VALUES (?, ?, ?, ?)",
+                    java.sql.Statement.RETURN_GENERATED_KEYS)) {
+
+                preparedStatement.setString(1, game.whiteUsername());
+                preparedStatement.setString(2, game.blackUsername());
+                preparedStatement.setString(3, game.gameName());
+                preparedStatement.setString(4, gson.toJson(game.game()));
+
+                preparedStatement.executeUpdate();
+
+                try (var generatedKeys = preparedStatement.getGeneratedKeys()) {
+                    if (generatedKeys.next()) {
+                        return generatedKeys.getInt(1);
+                    } else {
+                        throw new DataAccessException("Failed to get generated game ID");
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException(String.format("Unable to create game: %s", e.getMessage()));
+        }
     }
 
     @Override
     public GameData getGame(int gameID) throws DataAccessException {
-        throw new UnsupportedOperationException("Not implemented yet");
+        try (var conn = DatabaseManager.getConnection()) {
+            try (var preparedStatement = conn.prepareStatement("SELECT * FROM games WHERE gameID=?")) {
+                preparedStatement.setInt(1, gameID);
+                try (var rs = preparedStatement.executeQuery()) {
+                    if (rs.next()) {
+                        return new GameData(
+                                rs.getInt("gameID"),
+                                rs.getString("whiteUsername"),
+                                rs.getString("blackUsername"),
+                                rs.getString("gameName"),
+                                gson.fromJson(rs.getString("game"), ChessGame.class)
+                        );
+                    }
+                    throw new DataAccessException("Game not found");
+                }
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException(String.format("Unable to read game: %s", e.getMessage()));
+        }
     }
 
     @Override
     public void updateGame(GameData game) throws DataAccessException {
-        throw new UnsupportedOperationException("Not implemented yet");
+        try (var conn = DatabaseManager.getConnection()) {
+            try (var preparedStatement = conn.prepareStatement(
+                    "UPDATE games SET whiteUsername=?, blackUsername=?, gameName=?, game=? WHERE gameID=?")) {
+
+                preparedStatement.setString(1, game.whiteUsername());
+                preparedStatement.setString(2, game.blackUsername());
+                preparedStatement.setString(3, game.gameName());
+                preparedStatement.setString(4, gson.toJson(game.game()));
+                preparedStatement.setInt(5, game.gameID());
+
+                int rowsAffected = preparedStatement.executeUpdate();
+                if (rowsAffected == 0) {
+                    throw new DataAccessException("Game not found");
+                }
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException(String.format("Unable to update game: %s", e.getMessage()));
+        }
     }
 
     @Override
     public void createAuth(AuthData auth) throws DataAccessException {
-        throw new UnsupportedOperationException("Not implemented yet");
+        try (var conn = DatabaseManager.getConnection()) {
+            try (var preparedStatement = conn.prepareStatement(
+                    "INSERT INTO auth_tokens (authToken, username) VALUES (?, ?)")) {
+
+                preparedStatement.setString(1, auth.authToken());
+                preparedStatement.setString(2, auth.username());
+
+                preparedStatement.executeUpdate();
+            }
+        } catch (SQLException e) {
+            if (e.getMessage().contains("Duplicate entry")) {
+                throw new DataAccessException("Auth token already exists");
+            }
+            throw new DataAccessException(String.format("Unable to create auth token: %s", e.getMessage()));
+        }
     }
 
     @Override
     public AuthData getAuth(String authToken) throws DataAccessException {
-        throw new UnsupportedOperationException("Not implemented yet");
+        try (var conn = DatabaseManager.getConnection()) {
+            try (var preparedStatement = conn.prepareStatement("SELECT * FROM auth_tokens WHERE authToken=?")) {
+                preparedStatement.setString(1, authToken);
+                try (var rs = preparedStatement.executeQuery()) {
+                    if (rs.next()) {
+                        return new AuthData(
+                                rs.getString("authToken"),
+                                rs.getString("username")
+                        );
+                    }
+                    throw new DataAccessException("Auth token not found");
+                }
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException(String.format("Unable to read auth token: %s", e.getMessage()));
+        }
     }
 
     @Override
     public void deleteAuth(String authToken) throws DataAccessException {
-        throw new UnsupportedOperationException("Not implemented yet");
+        try (var conn = DatabaseManager.getConnection()) {
+            try (var preparedStatement = conn.prepareStatement("DELETE FROM auth_tokens WHERE authToken=?")) {
+                preparedStatement.setString(1, authToken);
+
+                int rowsAffected = preparedStatement.executeUpdate();
+                if (rowsAffected == 0) {
+                    throw new DataAccessException("Auth token not found");
+                }
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException(String.format("Unable to delete auth token: %s", e.getMessage()));
+        }
     }
 
     @Override
     public Collection<GameData> listGames() throws DataAccessException {
-        throw new UnsupportedOperationException("Not implemented yet");
+        try (var conn = DatabaseManager.getConnection()) {
+            try (var preparedStatement = conn.prepareStatement("SELECT * FROM games")) {
+                try (var rs = preparedStatement.executeQuery()) {
+                    Collection<GameData> games = new ArrayList<>();
+                    while (rs.next()) {
+                        games.add(new GameData(
+                                rs.getInt("gameID"),
+                                rs.getString("whiteUsername"),
+                                rs.getString("blackUsername"),
+                                rs.getString("gameName"),
+                                gson.fromJson(rs.getString("game"), ChessGame.class)
+                        ));
+                    }
+                    return games;
+                }
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException(String.format("Unable to list games: %s", e.getMessage()));
+        }
     }
 
     @Override
     public int generateGameId() throws DataAccessException {
-        throw new UnsupportedOperationException("Not implemented yet");
+        try (var conn = DatabaseManager.getConnection()) {
+            try (var preparedStatement = conn.prepareStatement(
+                    "INSERT INTO games (whiteUsername, blackUsername, gameName, game) VALUES (NULL, NULL, '', ?)",
+                    java.sql.Statement.RETURN_GENERATED_KEYS)) {
+
+                // Insert empty game to generate ID
+                preparedStatement.setString(1, gson.toJson(new ChessGame()));
+                preparedStatement.executeUpdate();
+
+                try (var generatedKeys = preparedStatement.getGeneratedKeys()) {
+                    if (generatedKeys.next()) {
+                        int generatedId = generatedKeys.getInt(1);
+                        // Clean up the temporary game
+                        try (var cleanup = conn.prepareStatement("DELETE FROM games WHERE gameID=?")) {
+                            cleanup.setInt(1, generatedId);
+                            cleanup.executeUpdate();
+                        }
+                        return generatedId;
+                    } else {
+                        throw new DataAccessException("Failed to generate game ID");
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException(String.format("Unable to generate game ID: %s", e.getMessage()));
+        }
     }
 }
