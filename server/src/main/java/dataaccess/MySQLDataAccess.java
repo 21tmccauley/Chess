@@ -65,17 +65,27 @@ public class MySQLDataAccess implements Dataaccess {
     @Override
     public void clearAll() throws DataAccessException {
         try (var conn = DatabaseManager.getConnection()) {
-            // Clear tables in order to respect foreign key constraints
+            // Temporarily disable foreign key checks to allow clearing tables in any order
+            try (var stmt = conn.prepareStatement("SET FOREIGN_KEY_CHECKS=0")) {
+                stmt.executeUpdate();
+            }
+
+            // Clear all tables
             var clearStatements = new String[] {
-                    "DELETE FROM auth_tokens",
-                    "DELETE FROM games",
-                    "DELETE FROM users"
+                    "TRUNCATE TABLE auth_tokens",
+                    "TRUNCATE TABLE games",
+                    "TRUNCATE TABLE users"
             };
 
             for (var statement : clearStatements) {
                 try (var preparedStatement = conn.prepareStatement(statement)) {
                     preparedStatement.executeUpdate();
                 }
+            }
+
+            // Re-enable foreign key checks
+            try (var stmt = conn.prepareStatement("SET FOREIGN_KEY_CHECKS=1")) {
+                stmt.executeUpdate();
             }
         } catch (SQLException e) {
             throw new DataAccessException(String.format("Unable to clear database: %s", e.getMessage()));
@@ -198,16 +208,24 @@ public class MySQLDataAccess implements Dataaccess {
     @Override
     public void createAuth(AuthData auth) throws DataAccessException {
         try (var conn = DatabaseManager.getConnection()) {
-            try (var preparedStatement = conn.prepareStatement(
+            // maybe delete
+            try (var deleteStmt = conn.prepareStatement("DELETE FROM auth_tokens WHERE username = ?")) {
+                deleteStmt.setString(1, auth.username());
+                deleteStmt.executeUpdate();
+            }
+
+            //  insert the new token
+            try (var insertStmt = conn.prepareStatement(
                     "INSERT INTO auth_tokens (authToken, username) VALUES (?, ?)")) {
-                preparedStatement.setString(1, auth.authToken());
-                preparedStatement.setString(2, auth.username());
-                preparedStatement.executeUpdate();
+                insertStmt.setString(1, auth.authToken());
+                insertStmt.setString(2, auth.username());
+
+                int rowsAffected = insertStmt.executeUpdate();
+                if (rowsAffected == 0) {
+                    throw new DataAccessException("Failed to create auth token");
+                }
             }
         } catch (SQLException e) {
-            if (e.getMessage().contains("Duplicate entry")) {
-                throw new DataAccessException("Auth token already exists");
-            }
             throw new DataAccessException(String.format("Unable to create auth token: %s", e.getMessage()));
         }
     }
@@ -216,14 +234,12 @@ public class MySQLDataAccess implements Dataaccess {
     @Override
     public AuthData getAuth(String authToken) throws DataAccessException {
         try (var conn = DatabaseManager.getConnection()) {
-            try (var preparedStatement = conn.prepareStatement("SELECT * FROM auth_tokens WHERE authToken=?")) {
-                preparedStatement.setString(1, authToken);
-                try (var rs = preparedStatement.executeQuery()) {
+            try (var stmt = conn.prepareStatement("SELECT authToken, username FROM auth_tokens WHERE authToken = ?")) {
+                stmt.setString(1, authToken);
+
+                try (var rs = stmt.executeQuery()) {
                     if (rs.next()) {
-                        return new AuthData(
-                                rs.getString("authToken"),
-                                rs.getString("username")
-                        );
+                        return new AuthData(rs.getString("authToken"), rs.getString("username"));
                     }
                     throw new DataAccessException("Auth token not found");
                 }
