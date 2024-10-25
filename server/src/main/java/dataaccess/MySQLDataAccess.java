@@ -19,11 +19,9 @@ public class MySQLDataAccess implements Dataaccess {
     }
 
     private void configureDatabase() throws DataAccessException {
-        // Create database if it doesn't exist
         DatabaseManager.createDatabase();
 
         try (var conn = DatabaseManager.getConnection()) {
-            // Create tables if they don't exist
             var createStatements = new String[] {
                     """
                 CREATE TABLE IF NOT EXISTS users (
@@ -39,15 +37,15 @@ public class MySQLDataAccess implements Dataaccess {
                     blackUsername VARCHAR(255),
                     gameName VARCHAR(255) NOT NULL,
                     game TEXT NOT NULL,
-                    FOREIGN KEY (whiteUsername) REFERENCES users(username),
-                    FOREIGN KEY (blackUsername) REFERENCES users(username)
+                    FOREIGN KEY (whiteUsername) REFERENCES users(username) ON DELETE SET NULL,
+                    FOREIGN KEY (blackUsername) REFERENCES users(username) ON DELETE SET NULL
                 )
                 """,
                     """
                 CREATE TABLE IF NOT EXISTS auth_tokens (
                     authToken VARCHAR(255) NOT NULL PRIMARY KEY,
                     username VARCHAR(255) NOT NULL,
-                    FOREIGN KEY (username) REFERENCES users(username)
+                    FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE
                 )
                 """
             };
@@ -65,12 +63,11 @@ public class MySQLDataAccess implements Dataaccess {
     @Override
     public void clearAll() throws DataAccessException {
         try (var conn = DatabaseManager.getConnection()) {
-            // Temporarily disable foreign key checks to allow clearing tables in any order
+            // Disable foreign key checks
             try (var stmt = conn.prepareStatement("SET FOREIGN_KEY_CHECKS=0")) {
                 stmt.executeUpdate();
             }
 
-            // Clear all tables
             var clearStatements = new String[] {
                     "TRUNCATE TABLE auth_tokens",
                     "TRUNCATE TABLE games",
@@ -97,8 +94,9 @@ public class MySQLDataAccess implements Dataaccess {
         try (var conn = DatabaseManager.getConnection()) {
             try (var preparedStatement = conn.prepareStatement(
                     "INSERT INTO users (username, password, email) VALUES (?, ?, ?)")) {
+                String hashedPassword = BCrypt.hashpw(user.password(), BCrypt.gensalt());
                 preparedStatement.setString(1, user.username());
-                preparedStatement.setString(2, BCrypt.hashpw(user.password(), BCrypt.gensalt()));
+                preparedStatement.setString(2, hashedPassword);
                 preparedStatement.setString(3, user.email());
                 preparedStatement.executeUpdate();
             }
@@ -137,16 +135,12 @@ public class MySQLDataAccess implements Dataaccess {
             try (var preparedStatement = conn.prepareStatement(
                     "INSERT INTO games (whiteUsername, blackUsername, gameName, game) VALUES (?, ?, ?, ?)",
                     java.sql.Statement.RETURN_GENERATED_KEYS)) {
-
                 preparedStatement.setString(1, game.whiteUsername());
                 preparedStatement.setString(2, game.blackUsername());
                 preparedStatement.setString(3, game.gameName());
                 preparedStatement.setString(4, gson.toJson(game.game()));
 
-                int affectedRows = preparedStatement.executeUpdate();
-                if (affectedRows == 0) {
-                    throw new DataAccessException("Creating game failed, no rows affected.");
-                }
+                preparedStatement.executeUpdate();
 
                 try (var generatedKeys = preparedStatement.getGeneratedKeys()) {
                     if (generatedKeys.next()) {
@@ -208,38 +202,31 @@ public class MySQLDataAccess implements Dataaccess {
     @Override
     public void createAuth(AuthData auth) throws DataAccessException {
         try (var conn = DatabaseManager.getConnection()) {
-            // maybe delete
-            try (var deleteStmt = conn.prepareStatement("DELETE FROM auth_tokens WHERE username = ?")) {
-                deleteStmt.setString(1, auth.username());
-                deleteStmt.executeUpdate();
-            }
-
-            //  insert the new token
-            try (var insertStmt = conn.prepareStatement(
+            try (var preparedStatement = conn.prepareStatement(
                     "INSERT INTO auth_tokens (authToken, username) VALUES (?, ?)")) {
-                insertStmt.setString(1, auth.authToken());
-                insertStmt.setString(2, auth.username());
-
-                int rowsAffected = insertStmt.executeUpdate();
-                if (rowsAffected == 0) {
-                    throw new DataAccessException("Failed to create auth token");
-                }
+                preparedStatement.setString(1, auth.authToken());
+                preparedStatement.setString(2, auth.username());
+                preparedStatement.executeUpdate();
             }
         } catch (SQLException e) {
+            if (e.getMessage().contains("Duplicate entry")) {
+                throw new DataAccessException("Auth token already exists");
+            }
             throw new DataAccessException(String.format("Unable to create auth token: %s", e.getMessage()));
         }
     }
 
-
     @Override
     public AuthData getAuth(String authToken) throws DataAccessException {
         try (var conn = DatabaseManager.getConnection()) {
-            try (var stmt = conn.prepareStatement("SELECT authToken, username FROM auth_tokens WHERE authToken = ?")) {
-                stmt.setString(1, authToken);
-
-                try (var rs = stmt.executeQuery()) {
+            try (var preparedStatement = conn.prepareStatement("SELECT * FROM auth_tokens WHERE authToken=?")) {
+                preparedStatement.setString(1, authToken);
+                try (var rs = preparedStatement.executeQuery()) {
                     if (rs.next()) {
-                        return new AuthData(rs.getString("authToken"), rs.getString("username"));
+                        return new AuthData(
+                                rs.getString("authToken"),
+                                rs.getString("username")
+                        );
                     }
                     throw new DataAccessException("Auth token not found");
                 }
@@ -254,7 +241,6 @@ public class MySQLDataAccess implements Dataaccess {
         try (var conn = DatabaseManager.getConnection()) {
             try (var preparedStatement = conn.prepareStatement("DELETE FROM auth_tokens WHERE authToken=?")) {
                 preparedStatement.setString(1, authToken);
-
                 int rowsAffected = preparedStatement.executeUpdate();
                 if (rowsAffected == 0) {
                     throw new DataAccessException("Auth token not found");
@@ -290,31 +276,6 @@ public class MySQLDataAccess implements Dataaccess {
 
     @Override
     public int generateGameId() throws DataAccessException {
-        try (var conn = DatabaseManager.getConnection()) {
-            try (var preparedStatement = conn.prepareStatement(
-                    "INSERT INTO games (whiteUsername, blackUsername, gameName, game) VALUES (NULL, NULL, '', ?)",
-                    java.sql.Statement.RETURN_GENERATED_KEYS)) {
-
-                // Insert empty game to generate ID
-                preparedStatement.setString(1, gson.toJson(new ChessGame()));
-                preparedStatement.executeUpdate();
-
-                try (var generatedKeys = preparedStatement.getGeneratedKeys()) {
-                    if (generatedKeys.next()) {
-                        int generatedId = generatedKeys.getInt(1);
-                        // Clean up the temporary game
-                        try (var cleanup = conn.prepareStatement("DELETE FROM games WHERE gameID=?")) {
-                            cleanup.setInt(1, generatedId);
-                            cleanup.executeUpdate();
-                        }
-                        return generatedId;
-                    } else {
-                        throw new DataAccessException("Failed to generate game ID");
-                    }
-                }
-            }
-        } catch (SQLException e) {
-            throw new DataAccessException(String.format("Unable to generate game ID: %s", e.getMessage()));
-        }
+        return createGame(new GameData(0, null, null, "", new ChessGame()));
     }
 }
