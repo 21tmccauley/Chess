@@ -29,7 +29,11 @@ public class Server {
 
     public int run(int desiredPort) {
         if (dataAccess == null) {
-            initializeDataAccess(new MemoryDataaccess());
+            try {
+                initializeDataAccess(new MySQLDataAccess());
+            } catch (DataAccessException e) {
+                throw new RuntimeException(e);
+            }
         }
 
         Spark.port(desiredPort);
