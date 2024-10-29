@@ -4,6 +4,7 @@ import dataaccess.Dataaccess;
 import dataaccess.DataAccessException;
 import model.UserData;
 import model.AuthData;
+import org.mindrot.jbcrypt.BCrypt;
 
 public class UserService {
     private final Dataaccess dataAccess;
@@ -28,13 +29,15 @@ public class UserService {
     }
 
     public AuthData login(UserData user) throws DataAccessException {
-        // Check if user exists and password is correct
+        // Get the stored user data from the database
         UserData storedUser = dataAccess.getUser(user.username());
-        if (storedUser == null || !storedUser.password().equals(user.password())) {
+
+        // Check if user exists and password matches using BCrypt
+        if (storedUser == null || !BCrypt.checkpw(user.password(), storedUser.password())) {
             throw new DataAccessException("Invalid username or password");
         }
 
-        // Create and return new auth token
+        // If credentials are valid, create new auth token
         return authService.createAuth(user.username());
     }
 
