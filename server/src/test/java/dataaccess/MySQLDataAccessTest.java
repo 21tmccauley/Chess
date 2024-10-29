@@ -24,7 +24,7 @@ class MySQLDataAccessTest {
 
     // User Tests
     @Test
-    void createUser_success() throws DataAccessException {
+    void createUserSuccess() throws DataAccessException {
         // Arrange
         UserData user = new UserData("testUser", "password123", "test@example.com");
 
@@ -33,7 +33,7 @@ class MySQLDataAccessTest {
     }
 
     @Test
-    void createUser_duplicate_fails() throws DataAccessException {
+    void createUserDuplicateFails() throws DataAccessException {
         // Arrange
         UserData user = new UserData("testUser", "password123", "test@example.com");
 
@@ -43,7 +43,7 @@ class MySQLDataAccessTest {
     }
 
     @Test
-    void getUser_exists() throws DataAccessException {
+    void getUserExists() throws DataAccessException {
         // Arrange
         String plainTextPassword = "password123";
         UserData user = new UserData("testUser", plainTextPassword, "test@example.com");
@@ -63,14 +63,14 @@ class MySQLDataAccessTest {
     }
 
     @Test
-    void getUser_doesNotExist() throws DataAccessException {
+    void getUserDoesNotExist() throws DataAccessException {
         // Act & Assert
         assertNull(dataAccess.getUser("nonexistentUser"));
     }
 
     // Auth Tests
     @Test
-    void createAuth_success() throws DataAccessException {
+    void createAuthSuccess() throws DataAccessException {
         // Arrange
         UserData user = new UserData("testUser", "password123", "test@example.com");
         dataAccess.createUser(user);
@@ -81,7 +81,7 @@ class MySQLDataAccessTest {
     }
 
     @Test
-    void createAuth_duplicateToken_fails() throws DataAccessException {
+    void createAuthDuplicateTokenFails() throws DataAccessException {
         // Arrange
         UserData user = new UserData("testUser", "password123", "test@example.com");
         dataAccess.createUser(user);
@@ -93,7 +93,7 @@ class MySQLDataAccessTest {
     }
 
     @Test
-    void getAuth_exists() throws DataAccessException {
+    void getAuthExists() throws DataAccessException {
         // Arrange
         UserData user = new UserData("testUser", "password123", "test@example.com");
         dataAccess.createUser(user);
@@ -110,13 +110,13 @@ class MySQLDataAccessTest {
     }
 
     @Test
-    void getAuth_doesNotExist() {
+    void getAuthDoesNotExist() {
         // Act & Assert
         assertThrows(DataAccessException.class, () -> dataAccess.getAuth("nonexistentToken"));
     }
 
     @Test
-    void deleteAuth_success() throws DataAccessException {
+    void deleteAuthSuccess() throws DataAccessException {
         // Arrange
         UserData user = new UserData("testUser", "password123", "test@example.com");
         dataAccess.createUser(user);
@@ -129,14 +129,14 @@ class MySQLDataAccessTest {
     }
 
     @Test
-    void deleteAuth_nonexistent() {
+    void deleteAuthNonexistent() {
         // Act & Assert
         assertThrows(DataAccessException.class, () -> dataAccess.deleteAuth("nonexistentToken"));
     }
 
     // Game Tests
     @Test
-    void createGame_success() throws DataAccessException {
+    void createGameSuccess() throws DataAccessException {
         // Arrange
         GameData game = new GameData(0, null, null, "testGame", new ChessGame());
 
@@ -151,7 +151,7 @@ class MySQLDataAccessTest {
     }
 
     @Test
-    void getGame_exists() throws DataAccessException {
+    void getGameExists() throws DataAccessException {
         // Arrange
         GameData game = new GameData(0, null, null, "testGame", new ChessGame());
         int gameId = dataAccess.createGame(game);
@@ -166,13 +166,13 @@ class MySQLDataAccessTest {
     }
 
     @Test
-    void getGame_doesNotExist() {
+    void getGameDoesNotExist() {
         // Act & Assert
         assertThrows(DataAccessException.class, () -> dataAccess.getGame(999999));
     }
 
     @Test
-    void updateGame_success() throws DataAccessException {
+    void updateGameSuccess() throws DataAccessException {
         // Arrange
         // First create the users that will be referenced in the game
         UserData whitePlayer = new UserData("whitePlayer", "password123", "white@example.com");
@@ -197,7 +197,7 @@ class MySQLDataAccessTest {
     }
 
     @Test
-    void updateGame_doesNotExist() throws DataAccessException {
+    void updateGameDoesNotExist() throws DataAccessException {
         // Arrange
         // Create the users first
         UserData whitePlayer = new UserData("whitePlayer", "password123", "white@example.com");
@@ -213,7 +213,7 @@ class MySQLDataAccessTest {
     }
 
     @Test
-    void listGames_empty() throws DataAccessException {
+    void listGamesEmpty() throws DataAccessException {
         // Act
         Collection<GameData> games = dataAccess.listGames();
 
@@ -222,7 +222,7 @@ class MySQLDataAccessTest {
     }
 
     @Test
-    void listGames_multipleGames() throws DataAccessException {
+    void listGamesMultipleGames() throws DataAccessException {
         // Arrange
         dataAccess.createGame(new GameData(0, null, null, "game1", new ChessGame()));
         dataAccess.createGame(new GameData(0, null, null, "game2", new ChessGame()));
@@ -236,7 +236,7 @@ class MySQLDataAccessTest {
     }
 
     @Test
-    void clearAll_success() throws DataAccessException {
+    void clearAllSuccess() throws DataAccessException {
         // Arrange
         UserData user = new UserData("testUser", "password123", "test@example.com");
         dataAccess.createUser(user);
@@ -255,4 +255,5 @@ class MySQLDataAccessTest {
         assertTrue(dataAccess.listGames().isEmpty());
         assertThrows(DataAccessException.class, () -> dataAccess.getAuth("testToken"));
     }
+
 }
