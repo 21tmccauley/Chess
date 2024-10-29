@@ -6,6 +6,7 @@ import model.GameData;
 import model.UserData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mindrot.jbcrypt.BCrypt;
 
 import java.util.Collection;
 
@@ -44,7 +45,8 @@ class MySQLDataAccessTest {
     @Test
     void getUser_exists() throws DataAccessException {
         // Arrange
-        UserData user = new UserData("testUser", "password123", "test@example.com");
+        String plainTextPassword = "password123";
+        UserData user = new UserData("testUser", plainTextPassword, "test@example.com");
         dataAccess.createUser(user);
 
         // Act
@@ -53,8 +55,11 @@ class MySQLDataAccessTest {
         // Assert
         assertNotNull(retrievedUser);
         assertEquals(user.username(), retrievedUser.username());
-        assertEquals(user.password(), retrievedUser.password());
         assertEquals(user.email(), retrievedUser.email());
+
+        // Verify the stored hash can be used to verify the original password
+        boolean passwordVerified = BCrypt.checkpw(plainTextPassword, retrievedUser.password());
+        assertTrue(passwordVerified, "Password hash verification failed");
     }
 
     @Test
