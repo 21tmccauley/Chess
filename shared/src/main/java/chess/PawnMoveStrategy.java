@@ -64,7 +64,9 @@ public class PawnMoveStrategy implements MoveStrategy {
     }
 
     private void addPawnCapture(Collection<ChessMove> moves, ChessBoard board, ChessPosition from, int toRow, int toColumn) {
-        if (!isValidPosition(toRow, toColumn)) return;
+        if (!isValidPosition(toRow, toColumn)){
+            return;
+        }
 
         ChessPosition to = new ChessPosition(toRow, toColumn);
         ChessPiece targetPiece = board.getPiece(to);
