@@ -36,14 +36,6 @@ public class GameState {
         // Otherwise, set it to null
     }
 
-    public boolean canCastle(ChessGame.TeamColor color, boolean kingSide) {
-        if (color == ChessGame.TeamColor.WHITE) {
-            return kingSide ? whiteCanCastleKingside : whiteCanCastleQueenside;
-        } else {
-            return kingSide ? blackCanCastleKingside : blackCanCastleQueenside;
-        }
-    }
-
     public ChessPosition getEnPassantTarget() {
         return enPassantTarget;
     }
