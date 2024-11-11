@@ -2,6 +2,12 @@ package client;
 
 import org.junit.jupiter.api.*;
 import server.Server;
+import chess.ChessGame;
+import model.AuthData;
+import model.GameData;
+import model.UserData;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ServerFacadeTests {
     private static Server server;
@@ -26,6 +32,11 @@ public class ServerFacadeTests {
     @BeforeEach
     void clearDatabase() throws Exception {
         facade.clear();
+    }
+
+    @Test
+    void clearSuccess(){
+        assertDoesNotThrow(() -> facade.clear());
     }
 
 }

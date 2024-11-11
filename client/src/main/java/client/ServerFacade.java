@@ -23,12 +23,10 @@ public class ServerFacade {
         gson = new Gson();
     }
 
-    public void clear() throws Exception{
+    public void clear() throws Exception {
         var path = "/db";
-        makeRequest("delete", path, null, null, null)
+        makeRequest("delete", path, null, null, null);
     }
-
-
 
 
     private <T> T makeRequest(String method, String path, Object request, String authToken, Class<T> responseClass) throws Exception {
@@ -71,11 +69,12 @@ public class ServerFacade {
         if (request != null) {
             http.addRequestProperty("Content-Type", "application/json");
             String reqData = new Gson().toJson(request);
-            try(OutputStream reqBody = http.getOutputStream()) {
+            try (OutputStream reqBody = http.getOutputStream()) {
                 reqBody.write(reqData.getBytes());
             }
         }
     }
+
     private void throwIfNotSuccessful(HttpURLConnection http) throws IOException, Exception {
         var status = http.getResponseCode();
         if (!isSuccessful(status)) {
@@ -88,10 +87,13 @@ public class ServerFacade {
     }
 
     private String readError(HttpURLConnection http) throws IOException {
-        record ErrorResponse(String message) {}
+        record ErrorResponse(String message) {
+        }
         try (InputStream respBody = http.getErrorStream()) {
             InputStreamReader reader = new InputStreamReader(respBody);
             return new Gson().fromJson(reader, ErrorResponse.class).message();
         }
+
+    }
 
 }
