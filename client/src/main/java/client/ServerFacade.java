@@ -18,22 +18,21 @@ public class ServerFacade {
     private final String serverUrl;
     private final Gson gson;
 
-    public ServerFacade(String url) {
-        serverUrl = url;
+    public ServerFacade(int port) {
+        serverUrl = "http://localhost:" + port;
         gson = new Gson();
     }
 
     public void clear() throws Exception {
         var path = "/db";
-        makeRequest("delete", path, null, null, null);
+        makeRequest("DELETE", path, null, null, null);
     }
-
 
     private <T> T makeRequest(String method, String path, Object request, String authToken, Class<T> responseClass) throws Exception {
         try {
             URL url = new URI(serverUrl + path).toURL();
             HttpURLConnection http = (HttpURLConnection) url.openConnection();
-            http.setRequestMethod(method);
+            http.setRequestMethod(method.toUpperCase());
             http.setDoOutput(true);
 
             if (authToken != null) {
@@ -58,14 +57,14 @@ public class ServerFacade {
             try (InputStream respBody = http.getInputStream()) {
                 InputStreamReader reader = new InputStreamReader(respBody);
                 if (responseClass != null) {
-                    response = new Gson().fromJson(reader, responseClass);
+                    response = gson.fromJson(reader, responseClass);
                 }
             }
         }
         return response;
     }
 
-    public static void writeBody(Object request, HttpURLConnection http) throws Exception {
+    private static void writeBody(Object request, HttpURLConnection http) throws Exception {
         if (request != null) {
             http.addRequestProperty("Content-Type", "application/json");
             String reqData = new Gson().toJson(request);
@@ -91,9 +90,9 @@ public class ServerFacade {
         }
         try (InputStream respBody = http.getErrorStream()) {
             InputStreamReader reader = new InputStreamReader(respBody);
-            return new Gson().fromJson(reader, ErrorResponse.class).message();
+            return gson.fromJson(reader, ErrorResponse.class).message();
         }
-
     }
 
+    // Add other methods for login, register, etc.
 }

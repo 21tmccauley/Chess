@@ -2,26 +2,18 @@ package client;
 
 import org.junit.jupiter.api.*;
 import server.Server;
-import chess.ChessGame;
-import model.AuthData;
-import model.GameData;
-import model.UserData;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 public class ServerFacadeTests {
+
     private static Server server;
     private static ServerFacade facade;
-    private static final String VALID_USERNAME = "testUser";
-    private static final String VALID_PASSWORD = "testPass";
-    private static final String VALID_EMAIL = "test@email.com";
 
     @BeforeAll
     public static void init() {
         server = new Server();
         var port = server.run(0);
         System.out.println("Started test HTTP server on " + port);
-        facade = new ServerFacade("http://localhost:" + port);
+        facade = new ServerFacade(port);
     }
 
     @AfterAll
@@ -30,13 +22,20 @@ public class ServerFacadeTests {
     }
 
     @BeforeEach
-    void clearDatabase() throws Exception {
+    void setUp() throws Exception {
         facade.clear();
     }
 
     @Test
-    void clearSuccess(){
-        assertDoesNotThrow(() -> facade.clear());
+    void clearSuccess() throws Exception {
+        // Test that clear works
+        Assertions.assertDoesNotThrow(() -> facade.clear());
     }
 
+    @Test
+    void clearTwiceSuccess() throws Exception {
+        // Test that clearing twice works
+        facade.clear();
+        Assertions.assertDoesNotThrow(() -> facade.clear());
+    }
 }
