@@ -38,4 +38,21 @@ public class ServerFacadeTests {
         facade.clear();
         Assertions.assertDoesNotThrow(() -> facade.clear());
     }
+
+    @Test
+    void registerSuccess() throws Exception {
+        var authData = facade.register("Player1", "password", "p1@email.com");
+        Assertions.assertNotNull(authData);
+        Assertions.assertNotNull(authData.authToken());
+        Assertions.assertEquals("Player1", authData.username());
+    }
+    @Test
+    void registerFailure() throws Exception {
+        // Negative test case - duplicate registration
+        facade.register("player1", "password", "p1@email.com");
+
+        Assertions.assertThrows(Exception.class, () -> {
+            facade.register("player1", "password", "p1@email.com");
+        });
+    }
 }

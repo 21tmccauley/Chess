@@ -3,6 +3,7 @@ package client;
 import com.google.gson.Gson;
 import model.AuthData;
 import model.GameData;
+import model.UserData;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,6 +27,12 @@ public class ServerFacade {
     public void clear() throws Exception {
         var path = "/db";
         makeRequest("DELETE", path, null, null, null);
+    }
+
+    public AuthData register(String username, String password, String email) throws Exception {
+        var path = "/user";
+        var userData = new UserData(username, password, email);
+        return makeRequest("POST", path, userData, null, AuthData.class);
     }
 
     private <T> T makeRequest(String method, String path, Object request, String authToken, Class<T> responseClass) throws Exception {
