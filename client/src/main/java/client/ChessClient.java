@@ -26,19 +26,6 @@ public class ChessClient {
         this.testInputIndex = 0;
     }
 
-    // For testing purposes only
-    public void setAuthTokenForTest(String authToken) {
-        this.authToken = authToken;
-        this.state = State.POSTLOGIN;
-    }
-
-    private String getInput() {
-        if (testInput != null && testInputIndex < testInput.length) {
-            return testInput[testInputIndex++];
-        }
-        return scanner.nextLine();
-    }
-
     public ChessClient(int port) {
         this.server = new ServerFacade(port);
         this.state = State.PRELOGIN;
@@ -232,8 +219,8 @@ public class ChessClient {
     }
 
     private void drawBoardPerspective(boolean blackPerspective) {
-        final String SET_BG_LIGHT = EscapeSequences.SET_BG_COLOR_WHITE;
-        final String SET_BG_DARK = EscapeSequences.SET_BG_COLOR_BLACK;
+        final String setBgLight = EscapeSequences.SET_BG_COLOR_WHITE;
+        final String setBgDark = EscapeSequences.SET_BG_COLOR_BLACK;
 
         // Print column headers
         System.out.print("    ");

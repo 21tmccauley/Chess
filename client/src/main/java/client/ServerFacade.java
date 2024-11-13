@@ -85,6 +85,7 @@ public class ServerFacade {
     private <T> T makeRequest(String method, String path, Object request, String authToken, Class<T> responseClass) throws Exception {
         try {
             URL url = new URI(serverUrl + path).toURL();
+            System.out.println(url);
             HttpURLConnection http = (HttpURLConnection) url.openConnection();
             http.setRequestMethod(method.toUpperCase());
             http.setDoOutput(true);
@@ -96,6 +97,7 @@ public class ServerFacade {
             if (request != null) {
                 writeBody(request, http);
             }
+
 
             http.connect();
             throwIfNotSuccessful(http);
