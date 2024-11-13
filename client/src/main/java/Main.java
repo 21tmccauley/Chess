@@ -2,6 +2,7 @@ import chess.*;
 import client.ChessClient;
 import java.util.Scanner;
 
+//this is a comment
 public class Main {
     public static void main(String[] args) {
         var client = new ChessClient(8080);
