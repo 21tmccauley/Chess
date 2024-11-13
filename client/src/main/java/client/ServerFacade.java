@@ -13,6 +13,7 @@ import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 
 public class ServerFacade {
@@ -58,6 +59,28 @@ public class ServerFacade {
         record ListGamesResponse(Collection<GameData> games) {}
         var response = makeRequest("GET", path, null, authToken, ListGamesResponse.class);
         return response.games();
+    }
+
+    public void joinGame(String authToken, int gameID, String playerColor) throws Exception {
+        var path = "/game";
+        Map<String, Object> requestBody = new HashMap<>();
+        // Send gameID as a number, not casting from Double later
+        requestBody.put("gameID", gameID);
+
+        // Only include playerColor if it's specified
+        if (playerColor != null && !playerColor.trim().isEmpty()) {
+            requestBody.put("playerColor", playerColor.toUpperCase());
+        }
+
+        makeRequest("PUT", path, requestBody, authToken, null);
+    }
+
+    // Helper method to check request/response
+    private void debugRequest(String method, String path, Object request) {
+        System.out.println("Making " + method + " request to " + path);
+        if (request != null) {
+            System.out.println("Request body: " + new Gson().toJson(request));
+        }
     }
 
     private <T> T makeRequest(String method, String path, Object request, String authToken, Class<T> responseClass) throws Exception {
