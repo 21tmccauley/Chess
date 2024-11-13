@@ -236,7 +236,7 @@ public class ChessClient {
 
             for (int col = 0; col < 8; col++) {
                 boolean isLightSquare = (row + col) % 2 == 0;
-                String background = isLightSquare ? SET_BG_LIGHT : SET_BG_DARK;
+                String background = isLightSquare ? setBgLight : setBgDark;
                 System.out.print(background);
 
                 if (row == 1) {
