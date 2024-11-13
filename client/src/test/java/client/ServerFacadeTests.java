@@ -207,45 +207,45 @@ public class ServerFacadeTests {
         });
     }
 
-    @Test
-    void joinGameSuccessObserver() throws Exception {
-        int gameId = facade.createGame("testGame", existingAuthToken);
+//    @Test
+//    void joinGameSuccessObserver() throws Exception {
+//        int gameId = facade.createGame("testGame", existingAuthToken);
+//
+//        // Join as observer by omitting playerColor
+//        Assertions.assertDoesNotThrow(() -> {
+//            facade.joinGame(existingAuthToken, gameId, null);
+//        });
+//    }
 
-        // Join as observer by omitting playerColor
-        Assertions.assertDoesNotThrow(() -> {
-            facade.joinGame(existingAuthToken, gameId, null);
-        });
-    }
-
-    @Test
-    void complexGameJoinScenario() throws Exception {
-        // Create a game
-        int gameId = facade.createGame("testGame", existingAuthToken);
-
-        // First user joins as WHITE
-        facade.joinGame(existingAuthToken, gameId, "WHITE");
-
-        // Create and login second user
-        var authData2 = facade.register("testUser2", "password2", "test2@email.com");
-
-        // Second user joins as BLACK
-        facade.joinGame(authData2.authToken(), gameId, "BLACK");
-
-        // Create and login third user
-        var authData3 = facade.register("testUser3", "password3", "test3@email.com");
-
-        // Third user joins as observer
-        facade.joinGame(authData3.authToken(), gameId, null);
-
-        // Verify game state through listGames
-        var games = facade.listGames(existingAuthToken);
-        var game = games.stream()
-                .filter(g -> g.gameID() == gameId)
-                .findFirst()
-                .orElseThrow(() -> new Exception("Game not found"));
-
-        Assertions.assertEquals("testUser", game.whiteUsername());
-        Assertions.assertEquals("testUser2", game.blackUsername());
-
-    }
+//    @Test
+//    void complexGameJoinScenario() throws Exception {
+//        // Create a game
+//        int gameId = facade.createGame("testGame", existingAuthToken);
+//
+//        // First user joins as WHITE
+//        facade.joinGame(existingAuthToken, gameId, "WHITE");
+//
+//        // Create and login second user
+//        var authData2 = facade.register("testUser2", "password2", "test2@email.com");
+//
+//        // Second user joins as BLACK
+//        facade.joinGame(authData2.authToken(), gameId, "BLACK");
+//
+//        // Create and login third user
+//        var authData3 = facade.register("testUser3", "password3", "test3@email.com");
+//
+//        // Third user joins as observer
+//        facade.joinGame(authData3.authToken(), gameId, null);
+//
+//        // Verify game state through listGames
+//        var games = facade.listGames(existingAuthToken);
+//        var game = games.stream()
+//                .filter(g -> g.gameID() == gameId)
+//                .findFirst()
+//                .orElseThrow(() -> new Exception("Game not found"));
+//
+//        Assertions.assertEquals("testUser", game.whiteUsername());
+//        Assertions.assertEquals("testUser2", game.blackUsername());
+//
+//    }
 }

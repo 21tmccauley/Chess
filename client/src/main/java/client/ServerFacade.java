@@ -64,10 +64,9 @@ public class ServerFacade {
     public void joinGame(String authToken, int gameID, String playerColor) throws Exception {
         var path = "/game";
         Map<String, Object> requestBody = new HashMap<>();
-        // Send gameID as a number, not casting from Double later
         requestBody.put("gameID", gameID);
 
-        // Only include playerColor if it's specified
+        // Only add playerColor to request if it's specified
         if (playerColor != null && !playerColor.trim().isEmpty()) {
             requestBody.put("playerColor", playerColor.toUpperCase());
         }
