@@ -35,6 +35,31 @@ public class ServerFacade {
         return makeRequest("POST", path, userData, null, AuthData.class);
     }
 
+    public AuthData login(String username, String password) throws Exception {
+        var path = "/session";
+        var loginRequest = new UserData(username, password, null);
+        return makeRequest("POST", path, loginRequest, null, AuthData.class);
+    }
+
+    public void logout(String authToken) throws Exception {
+        var path = "/session";
+        makeRequest("DELETE", path, null, authToken, null);
+    }
+
+    public int createGame(String gameName, String authToken) throws Exception {
+        var path = "/game";
+        var createGameRequest = Map.of("gameName", gameName);
+        var response = makeRequest("POST", path, createGameRequest, authToken, Map.class);
+        return ((Double) response.get("gameID")).intValue();
+    }
+
+    public Collection<GameData> listGames(String authToken) throws Exception {
+        var path = "/game";
+        record ListGamesResponse(Collection<GameData> games) {}
+        var response = makeRequest("GET", path, null, authToken, ListGamesResponse.class);
+        return response.games();
+    }
+
     private <T> T makeRequest(String method, String path, Object request, String authToken, Class<T> responseClass) throws Exception {
         try {
             URL url = new URI(serverUrl + path).toURL();

@@ -55,4 +55,57 @@ public class ServerFacadeTests {
             facade.register("player1", "password", "p1@email.com");
         });
     }
+
+    @Test
+    void loginSuccess() throws Exception {
+        // Register a user first
+        facade.register("player1", "password", "p1@email.com");
+
+        // Test successful login
+        var authData = facade.login("player1", "password");
+        Assertions.assertNotNull(authData);
+        Assertions.assertNotNull(authData.authToken());
+        Assertions.assertEquals("player1", authData.username());
+    }
+
+    @Test
+    void loginFailure() throws Exception {
+        // Test login with non-existent user
+        Assertions.assertThrows(Exception.class, () -> {
+            facade.login("nonexistentUser", "password");
+        });
+    }
+
+    @Test
+    void logoutSuccess() throws Exception {
+        // Register and login to get auth token
+        var authData = facade.register("player1", "password", "p1@email.com");
+
+        // Test successful logout
+        Assertions.assertDoesNotThrow(() -> {
+            facade.logout(authData.authToken());
+        });
+    }
+
+    @Test
+    void logoutFailure() throws Exception {
+        // Test logout with invalid auth token
+        Assertions.assertThrows(Exception.class, () -> {
+            facade.logout("invalidAuthToken");
+        });
+    }
+
+    @Test
+    void logoutTwiceFailure() throws Exception {
+        // Register and login to get auth token
+        var authData = facade.register("player1", "password", "p1@email.com");
+
+        // Logout once successfully
+        facade.logout(authData.authToken());
+
+        // Try to logout again with same token
+        Assertions.assertThrows(Exception.class, () -> {
+            facade.logout(authData.authToken());
+        });
+    }
 }
