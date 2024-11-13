@@ -74,14 +74,6 @@ public class ServerFacade {
         makeRequest("PUT", path, requestBody, authToken, null);
     }
 
-    // Helper method to check request/response
-    private void debugRequest(String method, String path, Object request) {
-        System.out.println("Making " + method + " request to " + path);
-        if (request != null) {
-            System.out.println("Request body: " + new Gson().toJson(request));
-        }
-    }
-
     private <T> T makeRequest(String method, String path, Object request, String authToken, Class<T> responseClass) throws Exception {
         try {
             URL url = new URI(serverUrl + path).toURL();

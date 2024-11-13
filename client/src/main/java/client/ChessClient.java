@@ -16,16 +16,6 @@ public class ChessClient {
     private final Scanner scanner;
     private final Map<Integer, Integer> gameNumberToId;
 
-    // Add these to your ChessClient class
-    private String[] testInput;
-    private int testInputIndex;
-
-    // For testing purposes only
-    public void setTestInput(String... inputs) {
-        this.testInput = inputs;
-        this.testInputIndex = 0;
-    }
-
     public ChessClient(int port) {
         this.server = new ServerFacade(port);
         this.state = State.PRELOGIN;
