@@ -157,44 +157,63 @@ public class ChessClient {
     }
 
     private String handleJoinGame() throws Exception {
+        if (state != State.POSTLOGIN) {
+            return "Please login first";
+        }
+
+        System.out.print("Enter game number: ");
+        String gameNumberStr = scanner.nextLine().trim();
+
         try {
-            System.out.print("Enter game number: ");
-            int gameNumber = Integer.parseInt(scanner.nextLine().trim());
-
+            int gameNumber = Integer.parseInt(gameNumberStr);
             if (!gameNumberToId.containsKey(gameNumber)) {
-                return "Error: Invalid game number. Please list games first.";
+                return "Invalid game number";
             }
 
-            System.out.print("Choose team color (WHITE/BLACK/empty to observe): ");
+            System.out.print("Choose team color (WHITE/BLACK/[ENTER] for observe): ");
             String color = scanner.nextLine().trim().toUpperCase();
-            if (color.isEmpty()) {
-                color = null;
+
+            // Only use WHITE or BLACK as valid colors
+            if (!color.isEmpty() && !color.equals("WHITE") && !color.equals("BLACK")) {
+                return "Invalid color. Please choose WHITE, BLACK, or press ENTER to observe";
             }
 
-            int gameId = gameNumberToId.get(gameNumber);
-            server.joinGame(authToken, gameId, color);
-            drawChessBoard();
-            return "Joined game successfully!";
-        } catch (Exception e) {
-            return "Error: " + e.getMessage();
+            try {
+                int gameId = gameNumberToId.get(gameNumber);
+                // Pass empty string for observe mode
+                server.joinGame(authToken, gameId, color.isEmpty() ? null : color);
+                drawChessBoard();
+                return color.isEmpty() ?
+                        "Now observing game " + gameNumber :
+                        "Successfully joined game " + gameNumber + " as " + color;
+            } catch (Exception e) {
+                return "Failed to join game: " + e.getMessage();
+            }
+        } catch (NumberFormatException e) {
+            return "Invalid input. Please enter a valid game number.";
         }
     }
 
-    private String handleObserveGame() throws Exception {
-        try {
-            System.out.print("Enter game number: ");
-            int gameNumber = Integer.parseInt(scanner.nextLine().trim());
+    private String handleObserveGame() {
+        if (state != State.POSTLOGIN) {
+            return "Please login first";
+        }
 
+        System.out.print("Enter game number: ");
+        String gameNumberStr = scanner.nextLine().trim();
+
+        try {
+            int gameNumber = Integer.parseInt(gameNumberStr);
             if (!gameNumberToId.containsKey(gameNumber)) {
-                return "Error: Invalid game number. Please list games first.";
+                return "Invalid game number";
             }
 
-            int gameId = gameNumberToId.get(gameNumber);
-            server.joinGame(authToken, gameId, null);
+            // For Phase 5, just verify game exists and draw the board
             drawChessBoard();
-            return "Observing game...";
-        } catch (Exception e) {
-            return "Error: " + e.getMessage();
+            return "Displaying game " + gameNumber;
+
+        } catch (NumberFormatException e) {
+            return "Invalid input. Please enter a valid game number.";
         }
     }
 

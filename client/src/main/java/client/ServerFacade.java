@@ -66,8 +66,9 @@ public class ServerFacade {
         Map<String, Object> requestBody = new HashMap<>();
         requestBody.put("gameID", gameID);
 
-        // Only add playerColor to request if it's specified
-        if (playerColor != null && !playerColor.trim().isEmpty()) {
+        // Only add playerColor if it's a non-empty string (WHITE or BLACK)
+        if (playerColor != null && !playerColor.isEmpty() &&
+                (playerColor.equalsIgnoreCase("WHITE") || playerColor.equalsIgnoreCase("BLACK"))) {
             requestBody.put("playerColor", playerColor.toUpperCase());
         }
 
@@ -77,19 +78,19 @@ public class ServerFacade {
     private <T> T makeRequest(String method, String path, Object request, String authToken, Class<T> responseClass) throws Exception {
         try {
             URL url = new URI(serverUrl + path).toURL();
-            System.out.println(url);
             HttpURLConnection http = (HttpURLConnection) url.openConnection();
             http.setRequestMethod(method.toUpperCase());
             http.setDoOutput(true);
 
+            // Add auth token if provided
             if (authToken != null) {
                 http.addRequestProperty("Authorization", authToken);
             }
 
+            // Write request body if provided
             if (request != null) {
                 writeBody(request, http);
             }
-
 
             http.connect();
             throwIfNotSuccessful(http);
