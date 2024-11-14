@@ -161,6 +161,14 @@ public class ChessClient {
             return "Please login first";
         }
 
+        // Auto-list games first
+        String gameList = handleListGames();
+        System.out.println(gameList);
+
+        if (gameNumberToId.isEmpty()) {
+            return "No games available to join";
+        }
+
         System.out.print("Enter game number: ");
         String gameNumberStr = scanner.nextLine().trim();
 
@@ -178,17 +186,12 @@ public class ChessClient {
                 return "Invalid color. Please choose WHITE, BLACK, or press ENTER to observe";
             }
 
-            try {
-                int gameId = gameNumberToId.get(gameNumber);
-                // Pass empty string for observe mode
-                server.joinGame(authToken, gameId, color.isEmpty() ? null : color);
-                drawChessBoard();
-                return color.isEmpty() ?
-                        "Now observing game " + gameNumber :
-                        "Successfully joined game " + gameNumber + " as " + color;
-            } catch (Exception e) {
-                return "Failed to join game: " + e.getMessage();
-            }
+            // For Phase 5, just verify game exists and draw the board
+            drawChessBoard();
+            return color.isEmpty() ?
+                    "Displaying game " + gameNumber + " as an observer" :
+                    "Displaying game " + gameNumber + " as " + color;
+
         } catch (NumberFormatException e) {
             return "Invalid input. Please enter a valid game number.";
         }
@@ -197,6 +200,18 @@ public class ChessClient {
     private String handleObserveGame() {
         if (state != State.POSTLOGIN) {
             return "Please login first";
+        }
+
+        // Auto-list games first
+        try {
+            String gameList = handleListGames();
+            System.out.println(gameList);
+
+            if (gameNumberToId.isEmpty()) {
+                return "No games available to observe";
+            }
+        } catch (Exception e) {
+            return "Error listing games: " + e.getMessage();
         }
 
         System.out.print("Enter game number: ");
@@ -234,26 +249,33 @@ public class ChessClient {
         // Print column headers
         System.out.print("    ");
         for (int col = 0; col < 8; col++) {
-            char colLabel = blackPerspective ? (char)('H' - col) : (char)('A' + col);
+            int displayCol = blackPerspective ? 7 - col : col;
+            char colLabel = (char)('A' + displayCol);
             System.out.print(colLabel + "  ");
         }
         System.out.println();
 
         for (int row = 0; row < 8; row++) {
+            // Convert to displayed row number (1-8)
             int displayRow = blackPerspective ? row + 1 : 8 - row;
             System.out.print(displayRow + "   ");
 
             for (int col = 0; col < 8; col++) {
-                boolean isLightSquare = (row + col) % 2 == 0;
+                // Calculate the actual board position based on perspective
+                int actualRow = blackPerspective ? row : 7 - row;
+                int actualCol = blackPerspective ? 7 - col : col;
+
+                boolean isLightSquare = (actualRow + actualCol) % 2 == 0;
                 String background = isLightSquare ? setBgLight : setBgDark;
                 System.out.print(background);
 
-                if (row == 1) {
+                // Determine piece based on actual position
+                if (actualRow == 1) {
                     System.out.print(EscapeSequences.SET_TEXT_COLOR_BLUE + EscapeSequences.BLACK_PAWN);
-                } else if (row == 6) {
+                } else if (actualRow == 6) {
                     System.out.print(EscapeSequences.SET_TEXT_COLOR_RED + EscapeSequences.WHITE_PAWN);
-                } else if (row == 0) {
-                    String piece = switch (col) {
+                } else if (actualRow == 0) {
+                    String piece = switch (actualCol) {
                         case 0, 7 -> EscapeSequences.BLACK_ROOK;
                         case 1, 6 -> EscapeSequences.BLACK_KNIGHT;
                         case 2, 5 -> EscapeSequences.BLACK_BISHOP;
@@ -261,9 +283,9 @@ public class ChessClient {
                         case 4 -> EscapeSequences.BLACK_KING;
                         default -> EscapeSequences.EMPTY;
                     };
-                    System.out.print(EscapeSequences.SET_TEXT_COLOR_BLUE + (blackPerspective ? piece : piece));
-                } else if (row == 7) {
-                    String piece = switch (col) {
+                    System.out.print(EscapeSequences.SET_TEXT_COLOR_BLUE + piece);
+                } else if (actualRow == 7) {
+                    String piece = switch (actualCol) {
                         case 0, 7 -> EscapeSequences.WHITE_ROOK;
                         case 1, 6 -> EscapeSequences.WHITE_KNIGHT;
                         case 2, 5 -> EscapeSequences.WHITE_BISHOP;
@@ -271,7 +293,7 @@ public class ChessClient {
                         case 4 -> EscapeSequences.WHITE_KING;
                         default -> EscapeSequences.EMPTY;
                     };
-                    System.out.print(EscapeSequences.SET_TEXT_COLOR_RED + (blackPerspective ? piece : piece));
+                    System.out.print(EscapeSequences.SET_TEXT_COLOR_RED + piece);
                 } else {
                     System.out.print(EscapeSequences.EMPTY);
                 }
@@ -280,6 +302,7 @@ public class ChessClient {
             System.out.println(EscapeSequences.RESET_ALL);
         }
     }
+
 
     private String getPreLoginHelp() {
         return """
