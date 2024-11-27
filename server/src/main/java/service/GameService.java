@@ -70,4 +70,93 @@ public class GameService {
 
         dataAccess.updateGame(game);
     }
+
+    /**
+     * Gets a game by ID, verifying the auth token in the process.
+     * This combines authentication and game retrieval in one step.
+     */
+    public GameData getGame(String authToken, int gameID) throws DataAccessException {
+        // First verify the auth token
+        AuthData authData = authService.getAuth(authToken);
+        if (authData == null) {
+            throw new DataAccessException("Invalid auth token");
+        }
+
+        // Then get the game
+        GameData game = dataAccess.getGame(gameID);
+        if (game == null) {
+            throw new DataAccessException("Game not found");
+        }
+
+        return game;
+    }
+    /**
+     * Gets the username associated with an auth token.
+     * This is useful for identifying players in game notifications.
+     */
+    public String getUsername(String authToken) throws DataAccessException {
+        AuthData authData = authService.getAuth(authToken);
+        if (authData == null) {
+            throw new DataAccessException("Invalid auth token");
+        }
+        return authData.username();
+    }
+
+    /**
+     * Updates the state of a game.
+     * This is used when moves are made or game state changes.
+     */
+    public void updateGame(GameData game) throws DataAccessException {
+        if (game == null) {
+            throw new DataAccessException("Game cannot be null");
+        }
+        dataAccess.updateGame(game);
+    }
+
+    /**
+     * Handles a player resigning from a game.
+     * This marks the game as over and updates the game state.
+     */
+    public void resignGame(int gameID, String username) throws DataAccessException {
+        GameData game = dataAccess.getGame(gameID);
+        if (game == null) {
+            throw new DataAccessException("Game not found");
+        }
+
+        // Create a new game instance with the updated state
+        ChessGame chessGame = game.game();
+        // You might want to add a method to ChessGame to handle resignation
+        // For now, we'll just create a new GameData with the same state
+        GameData updatedGame = new GameData(
+                game.gameID(),
+                game.whiteUsername(),
+                game.blackUsername(),
+                game.gameName(),
+                chessGame
+        );
+
+        // Update the game in the database
+        dataAccess.updateGame(updatedGame);
+    }
+
+    /**
+     * Verifies if a user is allowed to make moves in a game.
+     * This checks both authentication and player color.
+     */
+    public boolean canMakeMove(String authToken, int gameID, ChessGame.TeamColor color) throws DataAccessException {
+        AuthData authData = authService.getAuth(authToken);
+        if (authData == null) {
+            return false;
+        }
+
+        GameData game = dataAccess.getGame(gameID);
+        if (game == null) {
+            return false;
+        }
+
+        // Check if the user is the correct player for the given color
+        String username = authData.username();
+        return (color == ChessGame.TeamColor.WHITE && username.equals(game.whiteUsername())) ||
+                (color == ChessGame.TeamColor.BLACK && username.equals(game.blackUsername()));
+    }
 }

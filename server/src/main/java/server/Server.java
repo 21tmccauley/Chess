@@ -1,5 +1,6 @@
 package server;
 
+import org.eclipse.jetty.websocket.server.WebSocketHandler;
 import spark.*;
 import com.google.gson.Gson;
 import service.*;
@@ -13,6 +14,7 @@ public class Server {
     private AuthService authService;
     private UserService userService;
     private GameService gameService;
+    private WebSocketHandler webSocketHandler;
     private Gson gson;
 
     public Server() {
@@ -25,6 +27,7 @@ public class Server {
         this.authService = new AuthService(dataAccess);
         this.userService = new UserService(dataAccess, authService);
         this.gameService = new GameService(dataAccess, authService);
+        this.webSocketHandler = new WebSocketHandler(gameService);
     }
 
     public int run(int desiredPort) {
@@ -39,7 +42,17 @@ public class Server {
         Spark.port(desiredPort);
         Spark.staticFiles.location("resources/web");
 
-        // Register endpoints
+        // Configure CORS (Cross-Origin Resource Sharing) for WebSocket connections
+        Spark.before((request, response) -> {
+            response.header("Access-Control-Allow-Origin", "*");
+            response.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
+            response.header("Access-Control-Allow-Headers", "Content-Type,Authorization,X-Requested-With,Content-Length,Accept,Origin");
+        });
+
+        // Register WebSocket endpoint before HTTP endpoints
+        Spark.webSocket("/ws", WebSocketHandler.WebSocketEndpoint.class);
+
+        // Register HTTP endpoints
         registerEndpoints();
 
         Spark.awaitInitialization();
