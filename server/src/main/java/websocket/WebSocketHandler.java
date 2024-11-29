@@ -149,7 +149,7 @@ public class WebSocketHandler {
 
     private static void handleConnect(Session session, UserGameCommand command) throws Exception {
         // Verify auth token and get game data
-        GameData game = gameService.getGame(command.authToken);
+        GameData game = gameService.getGame(command.authToken, command.gameID);
         String username = gameService.getUsername(command.authToken);
 
         // Create and store connection info
@@ -180,7 +180,7 @@ public class WebSocketHandler {
             throw new Exception("Only players can make moves");
         }
 
-        GameData game = gameService.getGame(command.gameID);
+        GameData game = gameService.getGame(command.authToken, command.gameID);
         if (game.game().getTeamTurn() != info.teamColor) {
             throw new Exception("It's not your turn");
         }
@@ -211,7 +211,7 @@ public class WebSocketHandler {
             throw new Exception("Only players can resign");
         }
 
-        GameData game = gameService.getGame(command.gameID);
+        GameData game = gameService.getGame(command.authToken, command.gameID);
         // Update game state for resignation
         gameService.resignGame(game.gameID(), info.username);
 
@@ -224,7 +224,7 @@ public class WebSocketHandler {
     }
 
     private static void handleHighlightMoves(Session session, UserGameCommand command) throws Exception {
-        GameData game = gameService.getGame(command.gameID);
+        GameData game = gameService.getGame(command.authToken, command.gameID);
         Collection<ChessMove> validMoves = game.game().validMoves(command.piece);
 
         // Send moves only to requesting client
