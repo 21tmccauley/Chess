@@ -127,7 +127,7 @@ public class ChessClient {
 
         try {
             int gameId = server.createGame(gameName, authToken);
-            return "Game created successfully with ID: " + gameId;
+            return "Game created successfully ";
         } catch (Exception e) {
             return "Error: " + e.getMessage();
         }
@@ -161,41 +161,67 @@ public class ChessClient {
             return "Please login first";
         }
 
-        // Auto-list games first
-        String gameList = handleListGames();
-        System.out.println(gameList);
+        System.out.print("Enter game number: ");
+        int gameNumber = Integer.parseInt(scanner.nextLine().trim());
 
-        if (gameNumberToId.isEmpty()) {
-            return "No games available to join";
+        if (!gameNumberToId.containsKey(gameNumber)) {
+            return "Invalid game number";
         }
 
-        System.out.print("Enter game number: ");
-        String gameNumberStr = scanner.nextLine().trim();
+        System.out.print("Choose team color (WHITE/BLACK/[ENTER] for observe): ");
+        String color = scanner.nextLine().trim().toUpperCase();
+
+        // Only pass color if it's WHITE or BLACK
+        if (!color.equals("WHITE") && !color.equals("BLACK")) {
+            color = null; // This will make them an observer
+        }
 
         try {
-            int gameNumber = Integer.parseInt(gameNumberStr);
-            if (!gameNumberToId.containsKey(gameNumber)) {
-                return "Invalid game number";
+            int gameId = gameNumberToId.get(gameNumber);
+
+            // Add debug logging
+//            System.out.println("DEBUG: Attempting to join game " + gameId + " as " + (color != null ? color : "observer"));
+
+            server.joinGame(authToken, gameId, color);
+
+            // Verify the join was successful by fetching the updated game list
+            Collection<GameData> games = server.listGames(authToken);
+            boolean joinSuccessful = false;
+
+            for (GameData game : games) {
+                if (game.gameID() == gameId) {
+                    if (color != null) {
+                        if (color.equals("WHITE") && game.whiteUsername() != null) {
+                            joinSuccessful = true;
+                        } else if (color.equals("BLACK") && game.blackUsername() != null) {
+                            joinSuccessful = true;
+                        }
+                    } else {
+                        // For observers, just verify we can still see the game
+                        joinSuccessful = true;
+                    }
+
+                    // Debug logging
+//                    System.out.println("DEBUG: Game state after join attempt:");
+//                    System.out.println("DEBUG: White player: " + game.whiteUsername());
+//                    System.out.println("DEBUG: Black player: " + game.blackUsername());
+                    break;
+                }
             }
 
-            System.out.print("Choose team color (WHITE/BLACK/[ENTER] for observe): ");
-            String color = scanner.nextLine().trim().toUpperCase();
-
-            // Only use WHITE or BLACK as valid colors
-            if (!color.isEmpty() && !color.equals("WHITE") && !color.equals("BLACK")) {
-                return "Invalid color. Please choose WHITE, BLACK, or press ENTER to observe";
+            if (!joinSuccessful) {
+                return "Failed to join game: Join operation appeared to succeed but game state was not updated";
             }
 
-            // For Phase 5, just verify game exists and draw the board
+            String result = "Joined game successfully!";
+            System.out.println(result);
             drawChessBoard();
-            return color.isEmpty() ?
-                    "Displaying game " + gameNumber + " as an observer" :
-                    "Displaying game " + gameNumber + " as " + color;
-
-        } catch (NumberFormatException e) {
-            return "Invalid input. Please enter a valid game number.";
+            return result;
+        } catch (Exception e) {
+            return "Failed to join game: " + e.getMessage();
         }
     }
+
 
     private String handleObserveGame() {
         if (state != State.POSTLOGIN) {
