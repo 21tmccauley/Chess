@@ -40,9 +40,13 @@ public class Server {
         }
 
         Spark.port(desiredPort);
+
+        // WebSocket must be configured before anything else
+        Spark.webSocket("/ws", WebSocketHandle.class);
+
         Spark.staticFiles.location("resources/web");
 
-        // Configure CORS
+        // CORS and other configurations
         Spark.before((request, response) -> {
             response.header("Access-Control-Allow-Origin", "*");
             response.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
@@ -56,6 +60,9 @@ public class Server {
     }
 
     private void registerEndpoints() {
+        // WebSocket endpoint
+//        Spark.webSocket("/ws", WebSocketHandle.class);
+
         // User endpoints
         Spark.post("/user", this::register);
         Spark.post("/session", this::login);
@@ -69,8 +76,7 @@ public class Server {
         // Admin endpoints
         Spark.delete("/db", this::clearApplication);
 
-        // WebSocket endpoint
-        Spark.webSocket("/ws", WebSocketHandle.class);
+
     }
     private Object register(Request req, Response res) {
         try {
