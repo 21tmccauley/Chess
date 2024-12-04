@@ -160,16 +160,25 @@ public class WebSocketHandle {
                 throw new DataAccessException("Only players can resign");
             }
 
-            game.game().setTeamTurn(null);
-            dataAccess.updateGame(game);
+            ChessGame chessGame = game.game();
+            chessGame.setTeamTurn(null);
+            GameData updatedGame = new GameData(game.gameID(), game.whiteUsername(),
+                    game.blackUsername(), game.gameName(),
+                    chessGame);
+            dataAccess.updateGame(updatedGame);
 
             String notification = auth.username() + " has resigned from the game";
+            NotificationMessage message = new NotificationMessage(notification);
+            String messageJson = gson.toJson(message);
+
             Collection<Session> watchers = gameSessions.get(command.getGameID());
             if (watchers != null) {
-                NotificationMessage message = new NotificationMessage(notification);
-                String messageJson = gson.toJson(message);
                 for (Session watcher : watchers) {
-                    watcher.getRemote().sendString(messageJson);
+                    try {
+                        watcher.getRemote().sendString(messageJson);
+                    } catch (IOException e) {
+                        System.err.println("Failed to notify session: " + e.getMessage());
+                    }
                 }
             }
 
