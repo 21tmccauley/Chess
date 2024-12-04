@@ -1,5 +1,7 @@
 package server.websocket;
 
+import chess.ChessGame;
+import chess.ChessPiece;
 import com.google.gson.Gson;
 import dataaccess.Dataaccess;
 import dataaccess.DataAccessException;
@@ -100,10 +102,23 @@ public class WebSocketHandle {
             AuthData auth = dataAccess.getAuth(command.getAuthToken());
             GameData game = dataAccess.getGame(command.getGameID());
 
+            if (game.game().getTeamTurn() == null) {
+                throw new DataAccessException("Game is over");
+            }
+
             boolean isWhite = auth.username().equals(game.whiteUsername());
             boolean isBlack = auth.username().equals(game.blackUsername());
-            if (!isWhite && !isBlack) {
-                throw new DataAccessException("You must be a player to make moves");
+
+            if ((game.game().getTeamTurn() == ChessGame.TeamColor.WHITE && !isWhite) ||
+                    (game.game().getTeamTurn() == ChessGame.TeamColor.BLACK && !isBlack)) {
+                throw new DataAccessException("Not your turn");
+            }
+
+            ChessPiece piece = game.game().getBoard().getPiece(command.getMove().getStartPosition());
+            if (piece == null ||
+                    (piece.getTeamColor() == ChessGame.TeamColor.WHITE && !isWhite) ||
+                    (piece.getTeamColor() == ChessGame.TeamColor.BLACK && !isBlack)) {
+                throw new DataAccessException("Can only move your own pieces");
             }
 
             game.game().makeMove(command.getMove());
@@ -114,10 +129,8 @@ public class WebSocketHandle {
                 String moveDesc = auth.username() + " moved " + command.getMove().toString();
                 for (Session watcher : watchers) {
                     sendGameState(watcher, game);
-                    if (watcher != session) {
-                        notifyOthers(command.getGameID(), session, moveDesc);
-                    }
                 }
+                notifyOthers(command.getGameID(), session, moveDesc);
             }
 
         } catch (DataAccessException | chess.InvalidMoveException e) {

@@ -42,7 +42,7 @@ public class Server {
         Spark.port(desiredPort);
 
         // WebSocket must be configured before anything else
-        Spark.webSocket("/ws", WebSocketHandle.class);
+        Spark.webSocket("/ws", new WebSocketHandle(dataAccess));
 
         Spark.staticFiles.location("resources/web");
 
