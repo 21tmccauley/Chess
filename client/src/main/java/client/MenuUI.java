@@ -35,8 +35,7 @@ public class MenuUI {
         for (String option : options) {
             System.out.println(EscapeSequences.SET_TEXT_COLOR_GREEN +
                     EscapeSequences.SET_TEXT_BOLD +
-                    option +
-                    EscapeSequences.RESET_ALL);
+                    option + EscapeSequences.RESET_ALL);
         }
         System.out.println();
     }

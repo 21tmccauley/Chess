@@ -1,11 +1,12 @@
 package client;
 
 import chess.ChessGame;
-import chess.ChessPiece;
 import model.AuthData;
 import model.GameData;
+import websocket.messages.ServerMessage;
 import websocket.messages.LoadGameMessage;
 import websocket.messages.NotificationMessage;
+import websocket.messages.ErrorMessage;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -21,8 +22,9 @@ public class ChessStateManager implements MessageHandler {
     private String authToken;
     private final Map<Integer, Integer> gameNumberToId = new HashMap<>();
 
-    public ChessStateManager(int port) {
-        String serverUrl = "http://localhost:" + port;
+    public ChessStateManager(String serverUrl) {
+        String[] urlParts = serverUrl.split(":");
+        int port = Integer.parseInt(urlParts[urlParts.length - 1]);
         this.server = new ServerFacade(port);
         this.uiManager = new UIManager();
         this.connectionManager = new ConnectionManager(serverUrl, this);
@@ -41,11 +43,9 @@ public class ChessStateManager implements MessageHandler {
                 }
                 case GAMEPLAY -> {
                     if (input.equalsIgnoreCase("help")) {
-                        // Check if we still have a valid game ID
                         if (gameManager.getCurrentGameId() != null) {
                             commandProcessor.processCommand(input);
                         } else {
-                            // No active game - reset to post-login state
                             currentState = State.POSTLOGIN;
                             return handlePostLoginCommand(input);
                         }
@@ -88,6 +88,28 @@ public class ChessStateManager implements MessageHandler {
             }
             default -> "Invalid command. Type 'help' for a list of commands.";
         };
+    }
+
+    @Override
+    public void handleMessage(ServerMessage message) {
+        switch(message.getServerMessageType()) {
+            case LOAD_GAME:
+                LoadGameMessage gameMessage = (LoadGameMessage) message;
+                gameManager.updateGameState(gameMessage);
+                uiManager.clearScreen();
+                uiManager.drawChessBoard(gameMessage.getGame());
+                break;
+
+            case NOTIFICATION:
+                NotificationMessage notification = (NotificationMessage) message;
+                uiManager.displayNotification(notification.getMessage());
+                break;
+
+            case ERROR:
+                ErrorMessage error = (ErrorMessage) message;
+                uiManager.displayError(error.getErrorMessage());
+                break;
+        }
     }
 
     private String handleLogin() throws Exception {
@@ -141,9 +163,7 @@ public class ChessStateManager implements MessageHandler {
         int gameId = gameNumberToId.get(gameNumber);
 
         try {
-            // Set up game state
             if (color.isEmpty()) {
-                System.out.println("Debug: Setting up observer mode for game " + gameId);
                 gameManager.setCurrentGame(gameId, null);
             } else {
                 if (!color.equals("WHITE") && !color.equals("BLACK")) {
@@ -153,23 +173,17 @@ public class ChessStateManager implements MessageHandler {
                 gameManager.setCurrentGame(gameId, color);
             }
 
-            System.out.println("Debug: Attempting to connect to game " + gameId);
+            connectionManager.connectToGame(gameId);
+            currentState = State.GAMEPLAY;
 
-            try {
-                connectionManager.connectToGame(gameId);
-                currentState = State.GAMEPLAY;
-                return String.format("Joined game %d as %s",
-                        gameNumber,
-                        color.isEmpty() ? "an observer" : "the " + color + " player");
-            } catch (Exception e) {
-                // Connection failed - reset game state
-                gameManager.clearGameState();
-                currentState = State.POSTLOGIN;
-                throw e;
-            }
+            return String.format("Joined game %d as %s",
+                    gameNumber,
+                    color.isEmpty() ? "an observer" : "the " + color + " player");
+
         } catch (Exception e) {
-            System.out.println("Debug: Error during game connection: " + e.getMessage());
-            return "Error connecting to game: " + e.getMessage();
+            gameManager.clearGameState();
+            currentState = State.POSTLOGIN;
+            throw e;
         }
     }
 
@@ -184,8 +198,8 @@ public class ChessStateManager implements MessageHandler {
     }
 
     private void setLoggedOut() {
+        this.connectionManager.closeConnection();
         this.authToken = null;
-        this.connectionManager.setAuthToken(null);
         this.currentState = State.PRELOGIN;
     }
 
@@ -208,6 +222,7 @@ public class ChessStateManager implements MessageHandler {
             - list games: List all available games
             - join game: Join an existing game
             - observe: Observe an existing game
+            - quit: Exit the program
             """;
     }
 
@@ -229,30 +244,13 @@ public class ChessStateManager implements MessageHandler {
         return result.toString();
     }
 
-    @Override
-    public void handleGameUpdate(LoadGameMessage message) {
-        gameManager.updateGameState(message);
-        uiManager.clearScreen();
-        uiManager.drawChessBoard(message.getGame());
-    }
-
-    @Override
-    public void handleNotification(NotificationMessage message) {
-        uiManager.displayNotification(message.getMessage());
-    }
-
-    @Override
-    public void handleError(String errorMessage) {
-        uiManager.displayError(errorMessage);
+    public State getCurrentState() {
+        return currentState;
     }
 
     public enum State {
         PRELOGIN,
         POSTLOGIN,
         GAMEPLAY
-    }
-
-    public State getCurrentState() {
-        return currentState;
     }
 }

@@ -4,7 +4,8 @@ public class ChessClient {
     private final ChessStateManager stateManager;
 
     public ChessClient(int port) {
-        this.stateManager = new ChessStateManager(port);
+        String serverUrl = "http://localhost:" + port;
+        this.stateManager = new ChessStateManager(serverUrl);
     }
 
     public String evaluateCommand(String command) {
