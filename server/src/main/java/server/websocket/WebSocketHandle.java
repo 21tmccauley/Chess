@@ -39,11 +39,14 @@ public class WebSocketHandle {
 
     @OnWebSocketConnect
     public void onConnect(Session session) {
+
         connectionInfo.put(session, new ConnectionInfo());
+        System.out.println("Debug: WebSocket connected"); // Add debugging
     }
 
     @OnWebSocketClose
     public void onClose(Session session, int statusCode, String reason) {
+        System.out.println("Debug: WebSocket closed - Status: " + statusCode + ", Reason: " + reason); // Add debugging
         ConnectionInfo info = connectionInfo.remove(session);
         if (info != null && info.gameID != null) {
             Collection<Session> gameWatchers = gameSessions.get(info.gameID);
@@ -69,6 +72,12 @@ public class WebSocketHandle {
         } catch (Exception e) {
             sendError(session, "Error processing command: " + e.getMessage());
         }
+    }
+
+    @OnWebSocketError
+    public void onWebSocketError(Session session, Throwable cause) throws IOException {
+        System.out.println("Debug: WebSocket error: " + cause.getMessage()); // Add debugging
+        sendError(session,"WebSocket error: " + cause.getMessage());
     }
 
     private void handleConnect(Session session, String messageJson) throws IOException {
@@ -102,7 +111,7 @@ public class WebSocketHandle {
             AuthData auth = dataAccess.getAuth(command.getAuthToken());
             GameData game = dataAccess.getGame(command.getGameID());
 
-            if (game.game().getTeamTurn() == null) {
+            if (game.game().getTeamTurn() == ChessGame.TeamColor.RESIGNED) {
                 throw new DataAccessException("Game is over");
             }
 
@@ -141,10 +150,46 @@ public class WebSocketHandle {
     private void handleLeave(Session session) throws IOException {
         ConnectionInfo info = connectionInfo.get(session);
         if (info != null && info.gameID != null) {
-            Collection<Session> watchers = gameSessions.get(info.gameID);
-            if (watchers != null) {
-                watchers.remove(session);
-                notifyOthers(info.gameID, session, info.username + " has left the game");
+            try {
+                // Get the current game state
+                GameData game = dataAccess.getGame(info.gameID);
+
+                // If they're a player (not observer), update the game data to remove them
+                if (info.username.equals(game.whiteUsername())) {
+                    // Create new GameData with white player removed
+                    game = new GameData(
+                            game.gameID(),
+                            null,  // Remove white username
+                            game.blackUsername(),
+                            game.gameName(),
+                            game.game()
+                    );
+                    // Update the game in the database
+                    dataAccess.updateGame(game);
+                } else if (info.username.equals(game.blackUsername())) {
+                    // Create new GameData with black player removed
+                    game = new GameData(
+                            game.gameID(),
+                            game.whiteUsername(),
+                            null,  // Remove black username
+                            game.gameName(),
+                            game.game()
+                    );
+                    // Update the game in the database
+                    dataAccess.updateGame(game);
+                }
+
+                // Remove from active sessions
+                Collection<Session> watchers = gameSessions.get(info.gameID);
+                if (watchers != null) {
+                    watchers.remove(session);
+                    if (info.username != null) {
+                        notifyOthers(info.gameID, session, info.username + " has left the game");
+                    }
+                }
+
+            } catch (DataAccessException e) {
+                sendError(session, "Error updating game state: " + e.getMessage());
             }
         }
     }
@@ -154,35 +199,33 @@ public class WebSocketHandle {
             AuthData auth = dataAccess.getAuth(command.getAuthToken());
             GameData game = dataAccess.getGame(command.getGameID());
 
+            // First validate that this is a valid resign attempt
+            if (game.game().getTeamTurn() == ChessGame.TeamColor.RESIGNED) {
+                throw new DataAccessException("Game is already over - cannot resign");
+            }
+
             boolean isPlayer = auth.username().equals(game.whiteUsername()) ||
                     auth.username().equals(game.blackUsername());
             if (!isPlayer) {
                 throw new DataAccessException("Only players can resign");
             }
 
-            ChessGame chessGame = game.game();
-            chessGame.setTeamTurn(null);
-            GameData updatedGame = new GameData(game.gameID(), game.whiteUsername(),
-                    game.blackUsername(), game.gameName(),
-                    chessGame);
-            dataAccess.updateGame(updatedGame);
+            // If we get here, the resignation is valid
+            game.game().setTeamTurn(ChessGame.TeamColor.RESIGNED);
+            dataAccess.updateGame(game);
 
             String notification = auth.username() + " has resigned from the game";
-            NotificationMessage message = new NotificationMessage(notification);
-            String messageJson = gson.toJson(message);
-
             Collection<Session> watchers = gameSessions.get(command.getGameID());
             if (watchers != null) {
+                NotificationMessage message = new NotificationMessage(notification);
+                String messageJson = gson.toJson(message);
                 for (Session watcher : watchers) {
-                    try {
-                        watcher.getRemote().sendString(messageJson);
-                    } catch (IOException e) {
-                        System.err.println("Failed to notify session: " + e.getMessage());
-                    }
+                    watcher.getRemote().sendString(messageJson);
                 }
             }
 
         } catch (DataAccessException e) {
+            // Convert the validation failure into an error message back to the client
             sendError(session, "Error resigning: " + e.getMessage());
         }
     }
