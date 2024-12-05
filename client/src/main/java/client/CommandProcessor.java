@@ -18,7 +18,9 @@ public class CommandProcessor {
 
     public void processCommand(String command) {
         String[] parts = command.toLowerCase().trim().split("\\s+");
-        if (parts.length == 0) return;
+        if (parts.length == 0) {
+            return;
+        }
 
         try {
             switch (parts[0]) {
@@ -114,11 +116,15 @@ public class CommandProcessor {
         }
 
         char fileChar = Character.toLowerCase(algebraicPos.charAt(0));
-        if (fileChar < 'a' || fileChar > 'h') return null;
+        if (fileChar < 'a' || fileChar > 'h') {
+            return null;
+        }
         int column = fileChar - 'a' + 1;
 
         char rankChar = algebraicPos.charAt(1);
-        if (rankChar < '1' || rankChar > '8') return null;
+        if (rankChar < '1' || rankChar > '8') {
+            return null;
+        }
         int row = Character.getNumericValue(rankChar);
 
         return new ChessPosition(row, column);

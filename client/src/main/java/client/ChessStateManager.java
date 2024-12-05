@@ -34,31 +34,30 @@ public class ChessStateManager implements MessageHandler {
 
     public String handleCommand(String input) {
         try {
-            switch (currentState) {
-                case PRELOGIN -> {
-                    return handlePreLoginCommand(input);
-                }
-                case POSTLOGIN -> {
-                    return handlePostLoginCommand(input);
-                }
-                case GAMEPLAY -> {
-                    if (input.equalsIgnoreCase("help")) {
-                        if (gameManager.getCurrentGameId() != null) {
-                            commandProcessor.processCommand(input);
-                        } else {
-                            currentState = State.POSTLOGIN;
-                            return handlePostLoginCommand(input);
-                        }
-                    } else {
-                        commandProcessor.processCommand(input);
-                    }
-                    return null;
-                }
-            }
+            return switch (currentState) {
+                case PRELOGIN -> handlePreLoginCommand(input);
+                case POSTLOGIN -> handlePostLoginCommand(input);
+                case GAMEPLAY -> handleGameplayCommand(input);
+            };
         } catch (Exception e) {
             return "Error: " + e.getMessage();
         }
-        return "Invalid command";
+    }
+
+    private String handleGameplayCommand(String input) throws Exception {
+        if (!input.equalsIgnoreCase("help")) {
+            commandProcessor.processCommand(input);
+            return null;
+        }
+
+        // Handle help command
+        if (gameManager.getCurrentGameId() == null) {
+            currentState = State.POSTLOGIN;
+            return handlePostLoginCommand(input);
+        }
+
+        commandProcessor.processCommand(input);
+        return null;
     }
 
     private String handlePreLoginCommand(String command) throws Exception {

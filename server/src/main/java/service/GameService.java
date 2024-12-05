@@ -139,24 +139,5 @@ public class GameService {
         dataAccess.updateGame(updatedGame);
     }
 
-    /**
-     * Verifies if a user is allowed to make moves in a game.
-     * This checks both authentication and player color.
-     */
-    public boolean canMakeMove(String authToken, int gameID, ChessGame.TeamColor color) throws DataAccessException {
-        AuthData authData = authService.getAuth(authToken);
-        if (authData == null) {
-            return false;
-        }
 
-        GameData game = dataAccess.getGame(gameID);
-        if (game == null) {
-            return false;
-        }
-
-        // Check if the user is the correct player for the given color
-        String username = authData.username();
-        return (color == ChessGame.TeamColor.WHITE && username.equals(game.whiteUsername())) ||
-                (color == ChessGame.TeamColor.BLACK && username.equals(game.blackUsername()));
-    }
 }

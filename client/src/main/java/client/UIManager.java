@@ -221,11 +221,4 @@ public class UIManager {
         };
     }
 
-    /**
-     * Displays the command prompt.
-     */
-    public void displayPrompt() {
-        System.out.print(EscapeSequences.SET_TEXT_COLOR_BLUE + "\n>>> " +
-                EscapeSequences.RESET_TEXT_COLOR);
-    }
 }

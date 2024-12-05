@@ -207,12 +207,6 @@ public class GameManager {
      * Updates the collection of active games
      * @param games Collection of current games from server
      */
-    public void updateGamesList(Collection<GameData> games) {
-        activeGames.clear();
-        for (GameData game : games) {
-            activeGames.put(game.gameID(), game);
-        }
-    }
 
     /**
      * Gets the current game state
