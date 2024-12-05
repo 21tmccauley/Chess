@@ -45,22 +45,5 @@ public class ChessPositionUtils {
                 rankChar >= '1' && rankChar <= '8';
     }
 
-    /**
-     * Converts a ChessPosition to algebraic notation.
-     *
-     * @param position The chess position to convert
-     * @return String representing the position in algebraic notation (e.g. "e4")
-     */
-    public static String toAlgebraicNotation(ChessPosition position) {
-        if (position == null ||
-                position.getRow() < 1 || position.getRow() > 8 ||
-                position.getColumn() < 1 || position.getColumn() > 8) {
-            return null;
-        }
 
-        char file = (char)('a' + position.getColumn() - 1);
-        char rank = (char)('0' + position.getRow());
-
-        return String.valueOf(file) + rank;
-    }
 }
