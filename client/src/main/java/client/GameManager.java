@@ -116,8 +116,8 @@ public class GameManager {
         }
 
         // Convert algebraic notation to positions
-        ChessPosition start = parsePosition(startPos);
-        ChessPosition end = parsePosition(endPos);
+        ChessPosition start = ChessPositionUtils.parsePosition(startPos);
+        ChessPosition end = ChessPositionUtils.parsePosition(endPos);
 
         if (start == null || end == null) {
             return false;
@@ -180,7 +180,7 @@ public class GameManager {
             return null;
         }
 
-        ChessPosition position = parsePosition(positionString);
+        ChessPosition position = ChessPositionUtils.parsePosition(positionString);
         if (position == null) {
             return null;
         }
@@ -224,32 +224,6 @@ public class GameManager {
         return currentGameId;
     }
 
-    /**
-     * Converts algebraic notation to a ChessPosition
-     * @param algebraicPos Position in algebraic notation (e.g., "e4")
-     * @return ChessPosition object, or null if invalid notation
-     */
-    private ChessPosition parsePosition(String algebraicPos) {
-        if (algebraicPos == null || algebraicPos.length() != 2) {
-            return null;
-        }
-
-        // Convert file (column) from letter to number (a=1, b=2, etc.)
-        char fileChar = Character.toLowerCase(algebraicPos.charAt(0));
-        if (fileChar < 'a' || fileChar > 'h') {
-            return null;
-        }
-        int column = fileChar - 'a' + 1;
-
-        // Convert rank (row) from character to number
-        char rankChar = algebraicPos.charAt(1);
-        if (rankChar < '1' || rankChar > '8') {
-            return null;
-        }
-        int row = Character.getNumericValue(rankChar);
-
-        return new ChessPosition(row, column);
-    }
 
     /**
      * Checks if it's the current player's turn
